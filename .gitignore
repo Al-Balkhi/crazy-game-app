@@ -44,9 +44,3 @@ build/
 
 # SQLite
 *.db
-
-# Environment
-.env
-
-# Python virtual env
-.venv/
