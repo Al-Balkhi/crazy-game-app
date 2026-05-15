@@ -1,0 +1,83 @@
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD PAGE
+   ═══════════════════════════════════════════════════════════════ */
+
+.dashboard-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.dashboard-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  flex: 1;
+  max-width: 200px;
+}
+
+.dashboard-stat-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.dashboard-stat-value--cyan {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.4);
+}
+
+.dashboard-stat-value--pink {
+  color: var(--cyber-pink);
+  text-shadow: 0 0 10px rgba(255, 63, 210, 0.4);
+}
+
+.dashboard-stat-value--purple {
+  color: var(--cyber-purple);
+  text-shadow: 0 0 10px rgba(123, 97, 255, 0.4);
+}
+
+.dashboard-stat-label {
+  font-family: var(--font-tech);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Device Grid ───────────────────────────────────────────── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── Loading ───────────────────────────────────────────────── */
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.dashboard-loading-icon {
+  color: var(--cyber-cyan);
+  animation: neonPulse 1.5s ease-in-out infinite;
+}
+
+.dashboard-loading p {
+  font-family: var(--font-tech);
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.9rem;
+}

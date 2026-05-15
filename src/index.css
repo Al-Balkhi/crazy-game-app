@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════════════════════════
+   CRAZY GAME LOUNGE — Cyber Gaming Design System
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Core Palette ── */
+  --cyber-cyan: #00D1FF;
+  --cyber-cyan-dim: #00a3cc;
+  --cyber-pink: #FF3FD2;
+  --cyber-pink-dim: #cc32a8;
+  --cyber-purple: #7B61FF;
+  --cyber-purple-dim: #6249cc;
+  --cyber-dark: #081221;
+  --cyber-darker: #050d18;
+  --cyber-surface: #0c1a2e;
+  --cyber-surface-light: #112240;
+  --cyber-border: rgba(0, 209, 255, 0.15);
+  --cyber-text: #e0e6ed;
+  --cyber-text-dim: #8892a4;
+  --cyber-text-bright: #ffffff;
+  --cyber-success: #00ff88;
+  --cyber-warning: #ffaa00;
+  --cyber-danger: #ff3366;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(12, 26, 46, 0.6);
+  --glass-bg-strong: rgba(12, 26, 46, 0.85);
+  --glass-border: rgba(0, 209, 255, 0.12);
+  --glass-blur: 20px;
+
+  /* ── Neon Glows ── */
+  --glow-cyan: 0 0 20px rgba(0, 209, 255, 0.3), 0 0 40px rgba(0, 209, 255, 0.1);
+  --glow-cyan-strong: 0 0 20px rgba(0, 209, 255, 0.5), 0 0 60px rgba(0, 209, 255, 0.2), 0 0 100px rgba(0, 209, 255, 0.1);
+  --glow-pink: 0 0 20px rgba(255, 63, 210, 0.3), 0 0 40px rgba(255, 63, 210, 0.1);
+  --glow-pink-strong: 0 0 20px rgba(255, 63, 210, 0.5), 0 0 60px rgba(255, 63, 210, 0.2), 0 0 100px rgba(255, 63, 210, 0.1);
+  --glow-purple: 0 0 20px rgba(123, 97, 255, 0.3), 0 0 40px rgba(123, 97, 255, 0.1);
+
+  /* ── Typography ── */
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-tech: 'Rajdhani', sans-serif;
+
+  /* ── Sizing ── */
+  --sidebar-width: 72px;
+  --sidebar-expanded: 220px;
+  --navbar-height: 60px;
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+}
+
+/* ── Reset & Base ───────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--cyber-dark);
+  color: var(--cyber-text);
+  line-height: 1.6;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cyber-darker);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cyber-cyan-dim);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-cyan);
+}
+
+/* ── Selection ──────────────────────────────────────────────── */
+::selection {
+  background: rgba(0, 209, 255, 0.3);
+  color: var(--cyber-text-bright);
+}
+
+/* ── Utility Animations ─────────────────────────────────────── */
+@keyframes neonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes glowBreath {
+  0%, 100% { box-shadow: var(--glow-cyan); }
+  50% { box-shadow: var(--glow-cyan-strong); }
+}
+
+@keyframes glowBreathPink {
+  0%, 100% { box-shadow: var(--glow-pink); }
+  50% { box-shadow: var(--glow-pink-strong); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(0, 209, 255, 0.2); }
+  50% { border-color: rgba(0, 209, 255, 0.5); }
+}
+
+@keyframes rgbBorder {
+  0% { border-color: var(--cyber-cyan); }
+  33% { border-color: var(--cyber-pink); }
+  66% { border-color: var(--cyber-purple); }
+  100% { border-color: var(--cyber-cyan); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ── Link Reset ─────────────────────────────────────────────── */
+a {
+  color: var(--cyber-cyan);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--cyber-text-bright);
+}

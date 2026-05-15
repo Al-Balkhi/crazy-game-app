@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════════════════════════════
+   INVOICE MODAL STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+.invoice-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invoice-header-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 4px;
+}
+
+.invoice-icon {
+  color: var(--cyber-cyan);
+  filter: drop-shadow(0 0 8px rgba(0, 209, 255, 0.4));
+}
+
+.invoice-header-section h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cyber-text-bright);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.invoice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.invoice-label {
+  font-family: var(--font-tech);
+  font-size: 0.85rem;
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.invoice-value {
+  font-family: var(--font-tech);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cyber-text-bright);
+}
+
+.invoice-value--badge {
+  background: rgba(123, 97, 255, 0.15);
+  color: var(--cyber-purple);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  border: 1px solid rgba(123, 97, 255, 0.3);
+}
+
+.invoice-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyber-border), transparent);
+  margin: 6px 0;
+}
+
+.invoice-divider--strong {
+  background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
+  height: 2px;
+  margin: 10px 0;
+}
+
+.invoice-products-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-tech);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cyber-purple);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.invoice-product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px;
+  font-size: 0.85rem;
+  color: var(--cyber-text);
+}
+
+.invoice-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(0, 209, 255, 0.08), rgba(123, 97, 255, 0.08));
+  border: 1px solid rgba(0, 209, 255, 0.2);
+  border-radius: var(--border-radius-sm);
+}
+
+.invoice-total-row span:first-child {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--cyber-text-bright);
+  letter-spacing: 3px;
+}
+
+.invoice-total-row span:last-child {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--cyber-cyan);
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.4);
+}

@@ -1,0 +1,503 @@
+/* ═══════════════════════════════════════════════════════════════
+   CYBER SHARED COMPONENT STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── CyberButton ────────────────────────────────────────────── */
+.cyber-btn {
+  font-family: var(--font-tech);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  padding: 10px 24px;
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline-start: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: inset-inline-start 0.5s;
+}
+
+.cyber-btn:hover::before {
+  inset-inline-start: 100%;
+}
+
+.cyber-btn--primary {
+  background: linear-gradient(135deg, rgba(0, 209, 255, 0.2), rgba(0, 209, 255, 0.05));
+  color: var(--cyber-cyan);
+  border-color: rgba(0, 209, 255, 0.4);
+}
+.cyber-btn--primary:hover {
+  background: linear-gradient(135deg, rgba(0, 209, 255, 0.35), rgba(0, 209, 255, 0.1));
+  box-shadow: var(--glow-cyan);
+  border-color: var(--cyber-cyan);
+  transform: translateY(-1px);
+}
+
+.cyber-btn--danger {
+  background: linear-gradient(135deg, rgba(255, 63, 210, 0.2), rgba(255, 63, 210, 0.05));
+  color: var(--cyber-pink);
+  border-color: rgba(255, 63, 210, 0.4);
+}
+.cyber-btn--danger:hover {
+  background: linear-gradient(135deg, rgba(255, 63, 210, 0.35), rgba(255, 63, 210, 0.1));
+  box-shadow: var(--glow-pink);
+  border-color: var(--cyber-pink);
+  transform: translateY(-1px);
+}
+
+.cyber-btn--secondary {
+  background: linear-gradient(135deg, rgba(123, 97, 255, 0.2), rgba(123, 97, 255, 0.05));
+  color: var(--cyber-purple);
+  border-color: rgba(123, 97, 255, 0.4);
+}
+.cyber-btn--secondary:hover {
+  background: linear-gradient(135deg, rgba(123, 97, 255, 0.35), rgba(123, 97, 255, 0.1));
+  box-shadow: var(--glow-purple);
+  border-color: var(--cyber-purple);
+  transform: translateY(-1px);
+}
+
+.cyber-btn--ghost {
+  background: transparent;
+  color: var(--cyber-text-dim);
+  border-color: transparent;
+}
+.cyber-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cyber-text);
+  border-color: var(--cyber-border);
+}
+
+.cyber-btn--sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.cyber-btn--icon {
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+}
+
+.cyber-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── CyberInput ─────────────────────────────────────────────── */
+.cyber-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cyber-input-wrapper label {
+  font-family: var(--font-tech);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cyber-input {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  background: rgba(8, 18, 33, 0.8);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--cyber-text);
+  outline: none;
+  transition: all 0.25s;
+  width: 100%;
+}
+
+.cyber-input:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1), var(--glow-cyan);
+}
+
+.cyber-input::placeholder {
+  color: var(--cyber-text-dim);
+  opacity: 0.5;
+}
+
+.cyber-input--search {
+  padding-inline-start: 40px;
+}
+
+.cyber-search-icon {
+  position: absolute;
+  inset-inline-start: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cyber-text-dim);
+  pointer-events: none;
+}
+
+.cyber-input-wrapper.has-label .cyber-search-icon {
+  top: calc(50% + 12px);
+}
+
+/* ── CyberSelect ────────────────────────────────────────────── */
+.cyber-select {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  background: rgba(8, 18, 33, 0.8);
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--cyber-text);
+  outline: none;
+  transition: all 0.25s;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300D1FF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-inline-end: 36px;
+}
+
+body.rtl .cyber-select {
+  background-position: left 12px center;
+}
+
+.cyber-select:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+}
+
+/* ── CyberModal ─────────────────────────────────────────────── */
+.cyber-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 13, 24, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.cyber-modal {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  padding: 32px;
+  min-width: 420px;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), var(--glow-cyan);
+}
+
+.cyber-modal--lg {
+  min-width: 600px;
+  max-width: 800px;
+}
+
+.cyber-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--cyber-border);
+}
+
+.cyber-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cyber-cyan);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.cyber-modal-close {
+  background: none;
+  border: 1px solid var(--cyber-border);
+  border-radius: 8px;
+  color: var(--cyber-text-dim);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.cyber-modal-close:hover {
+  color: var(--cyber-pink);
+  border-color: var(--cyber-pink);
+  box-shadow: var(--glow-pink);
+}
+
+.cyber-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cyber-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cyber-border);
+}
+
+/* ── CyberTable ─────────────────────────────────────────────── */
+.cyber-table-container {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.cyber-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cyber-table thead {
+  background: linear-gradient(90deg, rgba(0, 209, 255, 0.08), rgba(123, 97, 255, 0.08));
+}
+
+.cyber-table th {
+  font-family: var(--font-tech);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--cyber-cyan);
+  padding: 14px 20px;
+  text-align: start;
+  border-bottom: 1px solid var(--cyber-border);
+  white-space: nowrap;
+}
+
+.cyber-table td {
+  font-size: 0.9rem;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0, 209, 255, 0.06);
+  transition: all 0.2s;
+}
+
+.cyber-table tbody tr {
+  transition: all 0.2s;
+}
+
+.cyber-table tbody tr:hover {
+  background: rgba(0, 209, 255, 0.04);
+}
+
+.cyber-table tbody tr:hover td {
+  color: var(--cyber-text-bright);
+}
+
+.cyber-table-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── CyberPagination ────────────────────────────────────────── */
+.cyber-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--cyber-border);
+}
+
+.cyber-pagination-btn {
+  font-family: var(--font-tech);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--cyber-border);
+  border-radius: 6px;
+  color: var(--cyber-text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cyber-pagination-btn:hover:not(:disabled) {
+  border-color: var(--cyber-cyan);
+  color: var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(0, 209, 255, 0.2);
+}
+
+.cyber-pagination-btn.active {
+  background: rgba(0, 209, 255, 0.15);
+  border-color: var(--cyber-cyan);
+  color: var(--cyber-cyan);
+}
+
+.cyber-pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cyber-pagination-info {
+  font-family: var(--font-tech);
+  font-size: 0.8rem;
+  color: var(--cyber-text-dim);
+  margin: 0 8px;
+}
+
+/* ── CyberToolbar ───────────────────────────────────────────── */
+.cyber-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.cyber-toolbar-spacer {
+  flex: 1;
+}
+
+/* ── CyberBadge ─────────────────────────────────────────────── */
+.cyber-badge {
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cyber-badge--cyan {
+  background: rgba(0, 209, 255, 0.15);
+  color: var(--cyber-cyan);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+}
+
+.cyber-badge--pink {
+  background: rgba(255, 63, 210, 0.15);
+  color: var(--cyber-pink);
+  border: 1px solid rgba(255, 63, 210, 0.3);
+}
+
+.cyber-badge--purple {
+  background: rgba(123, 97, 255, 0.15);
+  color: var(--cyber-purple);
+  border: 1px solid rgba(123, 97, 255, 0.3);
+}
+
+.cyber-badge--success {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--cyber-success);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.cyber-badge--danger {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--cyber-danger);
+  border: 1px solid rgba(255, 51, 102, 0.3);
+}
+
+/* ── Page Header ────────────────────────────────────────────── */
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--cyber-text-bright);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--cyber-cyan), var(--cyber-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-header p {
+  font-family: var(--font-tech);
+  color: var(--cyber-text-dim);
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+/* ── Form Group ─────────────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Empty State ────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  color: var(--cyber-text-dim);
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--cyber-text-dim);
+  opacity: 0.6;
+  font-size: 0.9rem;
+}

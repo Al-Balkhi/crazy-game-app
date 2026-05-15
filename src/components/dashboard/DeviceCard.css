@@ -1,0 +1,423 @@
+/* ═══════════════════════════════════════════════════════════════
+   DEVICE CARD — The Hero Component
+   Premium gaming hardware UI cards
+   ═══════════════════════════════════════════════════════════════ */
+
+.device-card {
+  position: relative;
+  border-radius: var(--border-radius-lg);
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-height: 240px;
+}
+
+/* ── Decorative Accent Top Bar ──────────────────────────────── */
+.device-card-accent {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+  transition: height 0.3s;
+}
+
+/* ── Corner Decorations ─────────────────────────────────────── */
+.device-card-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+
+.device-card:hover .device-card-corner {
+  opacity: 0.8;
+}
+
+.device-card-corner--tl { top: 6px; inset-inline-start: 6px; border-top: 1px solid; border-inline-start: 1px solid; border-radius: 4px 0 0 0; }
+.device-card-corner--tr { top: 6px; inset-inline-end: 6px; border-top: 1px solid; border-inline-end: 1px solid; border-radius: 0 4px 0 0; }
+.device-card-corner--bl { bottom: 6px; inset-inline-start: 6px; border-bottom: 1px solid; border-inline-start: 1px solid; border-radius: 0 0 0 4px; }
+.device-card-corner--br { bottom: 6px; inset-inline-end: 6px; border-bottom: 1px solid; border-inline-end: 1px solid; border-radius: 0 0 4px 0; }
+
+body.rtl .device-card-corner--tl { border-radius: 0 4px 0 0; }
+body.rtl .device-card-corner--tr { border-radius: 4px 0 0 0; }
+body.rtl .device-card-corner--bl { border-radius: 0 0 4px 0; }
+body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   AVAILABLE STATE — Calm, cyan
+   ═══════════════════════════════════════════════════════════════ */
+
+.device-card--available {
+  background: linear-gradient(165deg, rgba(0, 209, 255, 0.06) 0%, rgba(12, 26, 46, 0.9) 40%, var(--glass-bg-strong) 100%);
+  border: 1px solid rgba(0, 209, 255, 0.15);
+  animation: glowBreath 4s ease-in-out infinite;
+}
+
+.device-card--available:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(0, 209, 255, 0.4);
+  box-shadow: var(--glow-cyan-strong);
+}
+
+.device-card--available .device-card-accent {
+  background: linear-gradient(90deg, var(--cyber-cyan), rgba(0, 209, 255, 0.3));
+}
+
+.device-card--available .device-card-corner {
+  border-color: var(--cyber-cyan);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUSY STATE — Active, pink/purple, intense
+   ═══════════════════════════════════════════════════════════════ */
+
+.device-card--busy {
+  background: linear-gradient(165deg, rgba(255, 63, 210, 0.08) 0%, rgba(123, 97, 255, 0.04) 30%, var(--glass-bg-strong) 100%);
+  border: 1px solid rgba(255, 63, 210, 0.25);
+  animation: glowBreathPink 3s ease-in-out infinite;
+}
+
+.device-card--busy:hover {
+  border-color: rgba(255, 63, 210, 0.5);
+}
+
+.device-card--busy .device-card-accent {
+  background: linear-gradient(90deg, var(--cyber-pink), var(--cyber-purple));
+  height: 3px;
+}
+
+.device-card--busy .device-card-corner {
+  border-color: var(--cyber-pink);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DISABLED STATE
+   ═══════════════════════════════════════════════════════════════ */
+
+.device-card--disabled {
+  opacity: 0.4;
+  animation: none !important;
+  cursor: not-allowed !important;
+  filter: grayscale(60%);
+}
+
+.device-card--disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DEVICE TYPE VARIANTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── PS5 — Angular, futuristic ─────────────────────────────── */
+.device-card--ps5 {
+  border-radius: 4px 20px 4px 20px;
+}
+
+.device-card--ps5 .device-card-accent {
+  clip-path: polygon(0 0, 70% 0, 65% 100%, 0 100%);
+}
+
+.device-card--ps5.device-card--available {
+  background: linear-gradient(
+    150deg,
+    rgba(0, 209, 255, 0.08) 0%,
+    rgba(0, 150, 200, 0.03) 25%,
+    rgba(12, 26, 46, 0.95) 60%,
+    rgba(8, 18, 33, 0.98) 100%
+  );
+}
+
+.device-card--ps5.device-card--busy {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 63, 210, 0.1) 0%,
+    rgba(123, 97, 255, 0.05) 25%,
+    rgba(12, 26, 46, 0.95) 60%,
+    rgba(8, 18, 33, 0.98) 100%
+  );
+}
+
+/* ── PS4 — Rounded, classic ────────────────────────────────── */
+.device-card--ps4 {
+  border-radius: var(--border-radius-xl);
+}
+
+.device-card--ps4 .device-card-accent {
+  border-radius: 20px 20px 0 0;
+}
+
+.device-card--ps4 .device-card-icon-wrapper {
+  background: linear-gradient(135deg, rgba(0, 100, 200, 0.2), rgba(0, 50, 120, 0.1));
+}
+
+/* ── Gaming PC — RGB rainbow border ────────────────────────── */
+.device-card--pc {
+  border-radius: var(--border-radius);
+}
+
+.device-card--pc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    var(--rgb-angle, 0deg),
+    var(--cyber-cyan),
+    var(--cyber-purple),
+    var(--cyber-pink),
+    var(--cyber-cyan)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rgbRotate 4s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.device-card--pc:hover::after {
+  opacity: 0.8;
+}
+
+@keyframes rgbRotate {
+  from { --rgb-angle: 0deg; }
+  to { --rgb-angle: 360deg; }
+}
+
+@property --rgb-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD INTERNALS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Header ────────────────────────────────────────────────── */
+.device-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-card-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.device-card--available .device-card-icon-wrapper {
+  background: rgba(0, 209, 255, 0.12);
+  color: var(--cyber-cyan);
+}
+
+.device-card--busy .device-card-icon-wrapper {
+  background: rgba(255, 63, 210, 0.12);
+  color: var(--cyber-pink);
+}
+
+.device-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.device-card-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--cyber-text-bright);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-card-type {
+  font-family: var(--font-tech);
+  font-size: 0.75rem;
+  color: var(--cyber-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Status Area ───────────────────────────────────────────── */
+.device-card-status-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Available State ───────────────────────────────────────── */
+.device-card-available {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.device-card-available-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cyber-cyan);
+  box-shadow: 0 0 12px rgba(0, 209, 255, 0.5);
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+.device-card-available-text {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cyber-cyan);
+  letter-spacing: 3px;
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+.device-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  width: fit-content;
+}
+
+.device-card-badge--session {
+  background: rgba(123, 97, 255, 0.15);
+  color: var(--cyber-purple);
+  border: 1px solid rgba(123, 97, 255, 0.3);
+}
+
+.device-card-badge--disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cyber-text-dim);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Countdown Timer ───────────────────────────────────────── */
+.device-card-timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 63, 210, 0.06);
+  border: 1px solid rgba(255, 63, 210, 0.15);
+  border-radius: var(--border-radius-sm);
+  color: var(--cyber-pink);
+}
+
+.device-card-timer--warning {
+  animation: countdownPulse 1s ease-in-out infinite;
+  border-color: rgba(255, 63, 210, 0.4);
+  background: rgba(255, 63, 210, 0.12);
+}
+
+.device-card-timer-digits {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.timer-digit {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.timer-sep {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  animation: neonPulse 1s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+/* ── Start Time ────────────────────────────────────────────── */
+.device-card-start-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-tech);
+  font-size: 0.75rem;
+  color: var(--cyber-text-dim);
+}
+
+/* ── Action Buttons ────────────────────────────────────────── */
+.device-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.device-card-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-tech);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.device-card-action-btn--add {
+  background: rgba(0, 209, 255, 0.08);
+  border-color: rgba(0, 209, 255, 0.25);
+  color: var(--cyber-cyan);
+}
+
+.device-card-action-btn--add:hover {
+  background: rgba(0, 209, 255, 0.18);
+  box-shadow: 0 0 15px rgba(0, 209, 255, 0.2);
+}
+
+.device-card-action-btn--end {
+  background: rgba(255, 63, 210, 0.08);
+  border-color: rgba(255, 63, 210, 0.25);
+  color: var(--cyber-pink);
+}
+
+.device-card-action-btn--end:hover {
+  background: rgba(255, 63, 210, 0.18);
+  box-shadow: 0 0 15px rgba(255, 63, 210, 0.2);
+}
