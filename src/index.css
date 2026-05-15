@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap');
 
 /* ═══════════════════════════════════════════════════════════════
    CRAZY GAME LOUNGE — Cyber Gaming Design System
@@ -37,9 +37,9 @@
   --glow-pink-strong: 0 0 20px rgba(255, 63, 210, 0.5), 0 0 60px rgba(255, 63, 210, 0.2), 0 0 100px rgba(255, 63, 210, 0.1);
   --glow-purple: 0 0 20px rgba(123, 97, 255, 0.3), 0 0 40px rgba(123, 97, 255, 0.1);
 
-  /* ── Typography ── */
+  /* ── Typography Tokens ── */
   --font-display: 'Orbitron', monospace;
-  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-body: 'Cairo', 'Tajawal', 'Inter', -apple-system, sans-serif;
   --font-tech: 'Rajdhani', sans-serif;
 
   /* ── Sizing ── */
@@ -50,6 +50,12 @@
   --border-radius-sm: 8px;
   --border-radius-lg: 16px;
   --border-radius-xl: 20px;
+}
+
+@theme {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-tech: var(--font-tech);
 }
 
 /* ── Reset & Base ───────────────────────────────────────────── */

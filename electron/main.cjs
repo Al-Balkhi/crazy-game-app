@@ -1,9 +1,10 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 // In development, load from Vite dev server; in production, load built files
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = !app.isPackaged;
 
 let backendProcess = null;
 
@@ -13,12 +14,26 @@ function startBackend() {
     return;
   }
 
+  // Correctly resolve the path in packaged app
+  // extraResources: { from: "backend/dist/backend.exe", to: "backend.exe" } puts it in resources/
   const backendPath = path.join(process.resourcesPath, 'backend.exe');
-  console.log(`Starting backend from: ${backendPath}`);
+  
+  console.log(`Resources Path: ${process.resourcesPath}`);
+  console.log(`Target Backend Path: ${backendPath}`);
+
+  if (!fs.existsSync(backendPath)) {
+    console.error(`ERROR: Backend executable not found at ${backendPath}`);
+    return;
+  }
 
   try {
     backendProcess = spawn(backendPath, [], {
       windowsHide: true,
+      cwd: process.resourcesPath, // Set working directory to where the exe is
+      env: {
+        ...process.env,
+        // Optional: Add any specific environment variables if needed
+      }
     });
 
     backendProcess.stdout.on('data', (data) => {
@@ -32,8 +47,12 @@ function startBackend() {
     backendProcess.on('close', (code) => {
       console.log(`Backend process exited with code ${code}`);
     });
+
+    backendProcess.on('error', (err) => {
+      console.error('Failed to start backend process:', err);
+    });
   } catch (err) {
-    console.error('Failed to start backend process:', err);
+    console.error('Exception starting backend process:', err);
   }
 }
 
