@@ -63,12 +63,14 @@ class ProductCreate(BaseModel):
     name: str
     purchase_price: float = 0.0
     selling_price: float = 0.0
+    quantity: int = 0
 
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     purchase_price: Optional[float] = None
     selling_price: Optional[float] = None
+    quantity: Optional[int] = None
     is_active: Optional[bool] = None
 
 
@@ -77,6 +79,9 @@ class ProductResponse(BaseModel):
     name: str
     purchase_price: float
     selling_price: float
+    quantity: int
+    initial_quantity: int
+    is_low_stock: bool = False
     is_active: bool
 
     class Config:
@@ -103,8 +108,9 @@ class SessionProductResponse(BaseModel):
 # ── Session ──────────────────────────────────────────────────────────────────
 class SessionCreate(BaseModel):
     device_id: int
-    duration_minutes: int
+    duration_minutes: int = 30
     session_type: str  # dual / triple / quad
+    is_open_session: bool = False
 
 
 class SessionResponse(BaseModel):
@@ -112,7 +118,10 @@ class SessionResponse(BaseModel):
     device_id: int
     start_time: datetime
     duration_minutes: int
+    actual_minutes: Optional[int] = None
+    is_open_session: bool = False
     session_type: str
+    booked_session_price: Optional[float] = None
     session_price: float
     total_cost: float
     status: str
@@ -130,8 +139,12 @@ class InvoiceResponse(BaseModel):
     start_time: datetime
     ended_at: Optional[datetime] = None
     duration_minutes: int
+    actual_minutes: Optional[int] = None
+    is_open_session: bool = False
     session_type: str
+    booked_session_price: float
     session_price: float
+    early_end: bool = False
     products: List[SessionProductResponse] = []
     products_total: float
     total_cost: float
@@ -151,6 +164,7 @@ class SettingsResponse(BaseModel):
     logo_path: Optional[str] = None
     username: str
     password_enabled: bool
+    has_password: bool = False
 
     class Config:
         from_attributes = True

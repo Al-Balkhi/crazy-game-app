@@ -39,7 +39,8 @@ out/
 *.blockmap
 
 # PyInstaller
-build/
+backend/build/
+backend/dist/
 *.spec
 
 # SQLite

@@ -43,6 +43,7 @@ def _enrich_device(device: Device, db: Session) -> dict:
             "device_id": active_session.device_id,
             "start_time": active_session.start_time,
             "duration_minutes": active_session.duration_minutes,
+            "is_open_session": bool(active_session.is_open_session),
             "session_type": active_session.session_type,
             "session_price": active_session.session_price,
             "total_cost": active_session.total_cost,
@@ -95,9 +96,14 @@ def delete_device(device_id: int, db: Session = Depends(get_db)):
     device = db.query(Device).filter(Device.id == device_id).first()
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
-    db.delete(device)
-    db.commit()
-    return {"message": "Device deleted"}
+    
+    try:
+        db.delete(device)
+        db.commit()
+        return {"message": "Device deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Cannot delete device: {str(e)}")
 
 
 @router.patch("/{device_id}/toggle", response_model=DeviceResponse)

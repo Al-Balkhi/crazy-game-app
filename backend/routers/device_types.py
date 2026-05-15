@@ -4,7 +4,6 @@ from typing import List, Optional
 from database import get_db
 from models import DeviceType
 from schemas import DeviceTypeCreate, DeviceTypeUpdate, DeviceTypeResponse
-
 router = APIRouter(prefix="/device-types", tags=["Device Types"])
 
 
@@ -50,9 +49,14 @@ def delete_device_type(type_id: int, db: Session = Depends(get_db)):
     device_type = db.query(DeviceType).filter(DeviceType.id == type_id).first()
     if not device_type:
         raise HTTPException(status_code=404, detail="Device type not found")
-    db.delete(device_type)
-    db.commit()
-    return {"message": "Device type deleted"}
+    
+    try:
+        db.delete(device_type)
+        db.commit()
+        return {"message": "Device type deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Cannot delete device type: {str(e)}")
 
 
 @router.patch("/{type_id}/toggle", response_model=DeviceTypeResponse)

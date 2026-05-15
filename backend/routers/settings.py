@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract
+from sqlalchemy import extract
 from database import get_db
 from models import Settings, Session as GameSession, SessionProduct, SessionStatus
 from schemas import (
@@ -8,56 +8,60 @@ from schemas import (
     SettingsResponse,
     AuthRequest,
     AuthResponse,
-    MonthlyReportResponse,
 )
-import hashlib
+from auth import get_settings_row, hash_password
 
 router = APIRouter(tags=["Settings"])
 
 
-def _hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
-def _get_or_create_settings(db: Session) -> Settings:
-    settings = db.query(Settings).first()
-    if not settings:
-        settings = Settings()
-        db.add(settings)
-        db.commit()
-        db.refresh(settings)
-    return settings
+def _to_settings_response(settings: Settings) -> SettingsResponse:
+    return SettingsResponse(
+        id=settings.id,
+        store_name=settings.store_name,
+        logo_path=settings.logo_path,
+        username=settings.username,
+        password_enabled=settings.password_enabled,
+        has_password=bool(settings.password_hash),
+    )
 
 
 @router.get("/settings", response_model=SettingsResponse)
 def get_settings(db: Session = Depends(get_db)):
-    return _get_or_create_settings(db)
+    return _to_settings_response(get_settings_row(db))
 
 
 @router.put("/settings", response_model=SettingsResponse)
 def update_settings(data: SettingsUpdate, db: Session = Depends(get_db)):
-    settings = _get_or_create_settings(db)
+    settings = get_settings_row(db)
 
     if data.store_name is not None:
         settings.store_name = data.store_name
     if data.username is not None:
         settings.username = data.username
     if data.password is not None:
-        settings.password_hash = _hash_password(data.password)
+        settings.password_hash = hash_password(data.password)
+
     if data.password_enabled is not None:
+        if data.password_enabled and not settings.password_hash and not data.password:
+            raise HTTPException(
+                status_code=400,
+                detail="Set a password before enabling password protection",
+            )
         settings.password_enabled = data.password_enabled
 
     db.commit()
     db.refresh(settings)
-    return settings
+    return _to_settings_response(settings)
 
 
 @router.post("/settings/auth", response_model=AuthResponse)
 def verify_auth(data: AuthRequest, db: Session = Depends(get_db)):
-    settings = _get_or_create_settings(db)
+    settings = get_settings_row(db)
     if not settings.password_enabled:
         return {"success": True, "message": "Authentication disabled"}
-    if settings.password_hash == _hash_password(data.password):
+    if not settings.password_hash:
+        return {"success": False, "message": "No password configured"}
+    if settings.password_hash == hash_password(data.password):
         return {"success": True, "message": "Authenticated"}
     return {"success": False, "message": "Invalid password"}
 

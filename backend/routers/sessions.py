@@ -16,30 +16,40 @@ from schemas import (
     SessionProductResponse,
     InvoiceResponse,
 )
+from pricing import (
+    calc_booked_session_price,
+    min_open_session_price,
+    resolve_open_session_charge,
+    resolve_session_charge,
+)
 from datetime import datetime
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
-def _calc_session_price(device_type: DeviceType, session_type: str) -> float:
-    """Look up the price for a given session type on a device type."""
-    price_map = {
-        "dual": device_type.dual_price,
-        "triple": device_type.triple_price,
-        "quad": device_type.quad_price,
-    }
-    return price_map.get(session_type, 0.0)
-
-
 def _calc_total_cost(session: GameSession) -> float:
-    """Session price + all ordered products."""
+    """Final session device charge + all ordered products."""
     products_total = sum(sp.unit_price * sp.quantity for sp in session.products)
     return session.session_price + products_total
 
 
+def _booked_price_for(session: GameSession) -> float:
+    if session.booked_session_price is not None:
+        return session.booked_session_price
+    return session.session_price
+
+
 @router.post("/", response_model=SessionResponse)
 def start_session(data: SessionCreate, db: Session = Depends(get_db)):
-    # Validate device exists and is active
+    if not data.is_open_session:
+        if data.duration_minutes < 30:
+            raise HTTPException(status_code=400, detail="Duration must be at least 30 minutes")
+        if data.duration_minutes % 15 != 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Duration must be in 15-minute increments (30, 45, 60, etc.)",
+            )
+
     device = (
         db.query(Device)
         .options(joinedload(Device.device_type))
@@ -51,7 +61,6 @@ def start_session(data: SessionCreate, db: Session = Depends(get_db)):
     if not device.is_active:
         raise HTTPException(status_code=400, detail="Device is disabled")
 
-    # Check no active session on this device
     active = (
         db.query(GameSession)
         .filter(
@@ -63,15 +72,23 @@ def start_session(data: SessionCreate, db: Session = Depends(get_db)):
     if active:
         raise HTTPException(status_code=400, detail="Device already has an active session")
 
-    # Calculate price
-    session_price = _calc_session_price(device.device_type, data.session_type)
+    if data.is_open_session:
+        booked_price = 0.0
+        duration_minutes = 0
+    else:
+        booked_price = calc_booked_session_price(
+            device.device_type, data.session_type, data.duration_minutes
+        )
+        duration_minutes = data.duration_minutes
 
     session = GameSession(
         device_id=data.device_id,
-        duration_minutes=data.duration_minutes,
+        duration_minutes=duration_minutes,
         session_type=data.session_type,
-        session_price=session_price,
-        total_cost=session_price,
+        is_open_session=data.is_open_session,
+        booked_session_price=booked_price,
+        session_price=booked_price,
+        total_cost=booked_price,
         status=SessionStatus.ACTIVE.value,
     )
     db.add(session)
@@ -93,19 +110,66 @@ def end_session(session_id: int, db: Session = Depends(get_db)):
     if session.status != SessionStatus.ACTIVE.value:
         raise HTTPException(status_code=400, detail="Session is not active")
 
+    device = (
+        db.query(Device)
+        .options(joinedload(Device.device_type))
+        .filter(Device.id == session.device_id)
+        .first()
+    )
+
+    ended_at = datetime.utcnow()
+    booked_price = _booked_price_for(session)
+
+    if session.is_open_session:
+        device_type = device.device_type
+        final_price, actual_minutes, _billable = resolve_open_session_charge(
+            device_type,
+            session.session_type,
+            session.start_time,
+            ended_at,
+        )
+        booked_price = min_open_session_price(device_type, session.session_type)
+        early_end = False
+    else:
+        final_price, actual_minutes, _billable = resolve_session_charge(
+            booked_price,
+            session.duration_minutes,
+            session.start_time,
+            ended_at,
+        )
+        early_end = actual_minutes < session.duration_minutes
+
     session.status = SessionStatus.COMPLETED.value
-    session.ended_at = datetime.utcnow()
+    session.ended_at = ended_at
+    session.actual_minutes = actual_minutes
+    session.session_price = final_price
+    if session.is_open_session:
+        session.booked_session_price = final_price
     session.total_cost = _calc_total_cost(session)
     db.commit()
     db.refresh(session)
-    return {"message": "Session ended", "total_cost": session.total_cost}
+    return {
+        "message": "Session ended",
+        "total_cost": session.total_cost,
+        "session_price": session.session_price,
+        "booked_session_price": booked_price,
+        "actual_minutes": actual_minutes,
+        "booked_minutes": session.duration_minutes,
+        "early_end": early_end,
+        "is_open_session": session.is_open_session,
+    }
 
 
 @router.post("/{session_id}/products", response_model=SessionProductResponse)
 def add_product_to_session(
     session_id: int, data: SessionProductCreate, db: Session = Depends(get_db)
 ):
-    session = db.query(GameSession).filter(GameSession.id == session_id).first()
+    session = (
+        db.query(GameSession)
+        .options(joinedload(GameSession.products))
+        .filter(GameSession.id == session_id)
+        .first()
+    )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     if session.status != SessionStatus.ACTIVE.value:
@@ -115,6 +179,15 @@ def add_product_to_session(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    available = product.quantity or 0
+    if data.quantity > available:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient stock for {product.name}. Available: {available}",
+        )
+
+    product.quantity = available - data.quantity
+
     sp = SessionProduct(
         session_id=session_id,
         product_id=data.product_id,
@@ -122,11 +195,11 @@ def add_product_to_session(
         unit_price=product.selling_price,
     )
     db.add(sp)
+    db.flush()
 
-    # Update session total
     session.total_cost = session.session_price + sum(
         s.unit_price * s.quantity for s in session.products
-    ) + (sp.unit_price * sp.quantity)
+    )
 
     db.commit()
     db.refresh(sp)
@@ -150,13 +223,15 @@ def get_session(session_id: int, db: Session = Depends(get_db)):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Enrich product names
     result = {
         "id": session.id,
         "device_id": session.device_id,
         "start_time": session.start_time,
         "duration_minutes": session.duration_minutes,
+        "actual_minutes": session.actual_minutes,
+        "is_open_session": bool(session.is_open_session),
         "session_type": session.session_type,
+        "booked_session_price": _booked_price_for(session),
         "session_price": session.session_price,
         "total_cost": session.total_cost,
         "status": session.status,
@@ -202,6 +277,16 @@ def get_invoice(session_id: int, db: Session = Depends(get_db)):
         })
         products_total += sp.unit_price * sp.quantity
 
+    booked_price = _booked_price_for(session)
+    actual = session.actual_minutes
+    is_open = bool(session.is_open_session)
+    early_end = (
+        not is_open
+        and actual is not None
+        and actual < session.duration_minutes
+        and session.session_price < booked_price
+    )
+
     return {
         "session_id": session.id,
         "device_name": device.name,
@@ -209,8 +294,12 @@ def get_invoice(session_id: int, db: Session = Depends(get_db)):
         "start_time": session.start_time,
         "ended_at": session.ended_at,
         "duration_minutes": session.duration_minutes,
+        "actual_minutes": actual,
+        "is_open_session": is_open,
         "session_type": session.session_type,
+        "booked_session_price": booked_price if not is_open else session.session_price,
         "session_price": session.session_price,
+        "early_end": early_end,
         "products": products,
         "products_total": products_total,
         "total_cost": session.total_cost,

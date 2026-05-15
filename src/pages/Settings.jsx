@@ -8,6 +8,7 @@ import { settingsAPI, deviceTypesAPI, reportsAPI } from '../lib/api';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSettings } from '../contexts/SettingsContext';
 import '../components/shared/CyberShared.css';
 import './Settings.css';
 
@@ -25,6 +26,7 @@ export function Settings() {
   const [report, setReport] = useState(null);
 
   const { t } = useLanguage();
+  const { refreshSettings, logout } = useSettings();
 
   const loadAll = useCallback(async () => {
     try {
@@ -40,11 +42,20 @@ export function Settings() {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   const handleSaveSettings = async () => {
+    if (settingsForm.password_enabled && !settingsForm.password && !settings?.has_password) {
+      alert(t('password_required_for_protection'));
+      return;
+    }
     try {
       const data = { store_name: settingsForm.store_name, username: settingsForm.username, password_enabled: settingsForm.password_enabled };
       if (settingsForm.password) data.password = settingsForm.password;
+      const wasEnabled = settings?.password_enabled;
       await settingsAPI.update(data);
-      alert('Settings saved!');
+      alert(t('settings_saved'));
+      const updated = await refreshSettings();
+      if ((updated.password_enabled && !wasEnabled) || (settingsForm.password && updated.password_enabled)) {
+        logout();
+      }
       loadAll();
     } catch (err) { alert('Error: ' + err.message); }
   };
@@ -78,8 +89,12 @@ export function Settings() {
 
   const handleTypeDelete = async (id) => {
     if (!confirm(t('delete_confirm'))) return;
-    try { await deviceTypesAPI.delete(id); loadAll(); }
-    catch (err) { alert('Error: ' + err.message); }
+    try {
+      await deviceTypesAPI.delete(id);
+      loadAll();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
   };
 
   const loadReport = async () => {
@@ -143,7 +158,17 @@ export function Settings() {
             <CyberInput label={t('password')} type="password" value={settingsForm.password} onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })} />
             <div className="settings-toggle-row">
               <span>{t('enable_password')}</span>
-              <button className={`settings-toggle ${settingsForm.password_enabled ? 'active' : ''}`} onClick={() => setSettingsForm({ ...settingsForm, password_enabled: !settingsForm.password_enabled })}>
+              <button
+                className={`settings-toggle ${settingsForm.password_enabled ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !settingsForm.password_enabled;
+                  if (next && !settingsForm.password && !settings?.has_password) {
+                    alert(t('password_required_for_protection'));
+                    return;
+                  }
+                  setSettingsForm({ ...settingsForm, password_enabled: next });
+                }}
+              >
                 <div className="settings-toggle-knob" />
               </button>
             </div>

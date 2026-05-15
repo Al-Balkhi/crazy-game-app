@@ -316,6 +316,25 @@ body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
   background: rgba(123, 97, 255, 0.15);
   color: var(--cyber-purple);
   border: 1px solid rgba(123, 97, 255, 0.3);
+  flex-wrap: wrap;
+}
+
+.device-card-badge--open {
+  background: rgba(0, 209, 255, 0.12);
+  color: var(--cyber-cyan);
+  border: 1px solid rgba(0, 209, 255, 0.35);
+  font-size: 0.6rem;
+  padding: 2px 8px;
+}
+
+.device-card-timer--open {
+  border-color: rgba(0, 209, 255, 0.35);
+  background: rgba(0, 209, 255, 0.08);
+  color: var(--cyber-cyan);
+}
+
+.device-card-timer--open .device-card-timer-label {
+  color: rgba(0, 209, 255, 0.75);
 }
 
 .device-card-badge--disabled {
@@ -328,12 +347,34 @@ body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
 .device-card-timer {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 12px;
+  padding: 12px 14px;
   background: rgba(255, 63, 210, 0.06);
   border: 1px solid rgba(255, 63, 210, 0.15);
   border-radius: var(--border-radius-sm);
   color: var(--cyber-pink);
+}
+
+.device-card-timer-icon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.device-card-timer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.device-card-timer-label {
+  font-family: var(--font-tech);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 63, 210, 0.75);
 }
 
 .device-card-timer--warning {
@@ -350,11 +391,17 @@ body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
 
 .timer-digit {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: 1px;
   min-width: 28px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-digit--seconds {
+  color: var(--cyber-text-bright);
+  min-width: 24px;
 }
 
 .timer-sep {

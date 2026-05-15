@@ -33,10 +33,17 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const updateQty = (productId, delta) => {
+  const maxQtyFor = (product) => {
+    const inCart = cart[product.id] || 0;
+    return Math.max(0, (product.quantity ?? 0) - inCart);
+  };
+
+  const updateQty = (product, delta) => {
+    const productId = product.id;
+    const max = maxQtyFor(product);
     setCart(prev => {
       const current = prev[productId] || 0;
-      const next = Math.max(0, current + delta);
+      const next = Math.min(max, Math.max(0, current + delta));
       if (next === 0) {
         const { [productId]: _, ...rest } = prev;
         return rest;
@@ -51,16 +58,20 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
   }, 0);
 
   const handleConfirm = async () => {
-    for (const [productId, quantity] of Object.entries(cart)) {
-      await onAdd(session.id, { product_id: parseInt(productId), quantity });
+    try {
+      for (const [productId, quantity] of Object.entries(cart)) {
+        await onAdd(session.id, { product_id: parseInt(productId), quantity });
+      }
+      window.dispatchEvent(new Event('inventory-changed'));
+      onClose();
+    } catch (err) {
+      alert(err.message || t('insufficient_stock'));
     }
-    onClose();
   };
 
   return (
     <CyberModal isOpen={isOpen} onClose={onClose} title={t('add_products')} size="lg">
       <div className="cyber-modal-body">
-        {/* Search */}
         <div className="add-product-search">
           <Search size={16} className="add-product-search-icon" />
           <input
@@ -72,22 +83,42 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
           />
         </div>
 
-        {/* Product Grid */}
         <div className="add-product-grid">
           {filtered.map(product => {
             const qty = cart[product.id] || 0;
+            const stock = product.quantity ?? 0;
+            const outOfStock = stock === 0;
+            const maxAdd = maxQtyFor(product);
             return (
-              <div key={product.id} className={`add-product-item ${qty > 0 ? 'selected' : ''}`}>
+              <div
+                key={product.id}
+                className={`add-product-item ${qty > 0 ? 'selected' : ''} ${outOfStock ? 'add-product-item--disabled' : ''}`}
+              >
                 <div className="add-product-item-info">
                   <span className="add-product-item-name">{product.name}</span>
-                  <span className="add-product-item-price">{product.selling_price.toLocaleString()} {t('syp')}</span>
+                  <span className="add-product-item-price">
+                    {product.selling_price.toLocaleString()} {t('syp')}
+                  </span>
+                  <span className={`add-product-item-stock ${product.is_low_stock ? 'add-product-item-stock--low' : ''}`}>
+                    {outOfStock ? t('out_of_stock') : `${t('in_stock')}: ${stock}`}
+                  </span>
                 </div>
                 <div className="add-product-item-controls">
-                  <button className="add-product-qty-btn" onClick={() => updateQty(product.id, -1)} disabled={qty === 0}>
+                  <button
+                    type="button"
+                    className="add-product-qty-btn"
+                    onClick={() => updateQty(product, -1)}
+                    disabled={qty === 0}
+                  >
                     <Minus size={14} />
                   </button>
                   <span className="add-product-qty">{qty}</span>
-                  <button className="add-product-qty-btn add-product-qty-btn--plus" onClick={() => updateQty(product.id, 1)}>
+                  <button
+                    type="button"
+                    className="add-product-qty-btn add-product-qty-btn--plus"
+                    onClick={() => updateQty(product, 1)}
+                    disabled={outOfStock || maxAdd === 0}
+                  >
                     <Plus size={14} />
                   </button>
                 </div>

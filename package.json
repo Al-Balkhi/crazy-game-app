@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"cross-env BROWSER=none vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "vite build && electron-builder"
+    "backend:build": "powershell -ExecutionPolicy Bypass -File backend/build_backend.ps1",
+    "electron:build": "npm run backend:build && vite build && electron-builder"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
@@ -63,16 +64,12 @@
       }
     ],
     "win": {
-      "target": "nsis",
-      "icon": "public/favicon.ico"
+      "target": "nsis"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/favicon.ico",
-      "uninstallerIcon": "public/favicon.ico",
-      "installerHeaderIcon": "public/favicon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Crazy Game"

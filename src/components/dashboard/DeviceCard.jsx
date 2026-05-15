@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Monitor, Gamepad2, Cpu, ShoppingCart, Square, Clock, Users, Zap } from 'lucide-react';
 import { useTimer } from '../../hooks/useTimer';
+import { useElapsedTimer } from '../../hooks/useElapsedTimer';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './DeviceCard.css';
 
@@ -20,6 +21,18 @@ function getDeviceStyle(typeName) {
   return DEVICE_STYLES.default;
 }
 
+function getSessionEndTime(session) {
+  if (session?.is_open_session) return null;
+  if (!session?.start_time || !session.duration_minutes) return null;
+  let startStr = session.start_time;
+  if (typeof startStr === 'string' && !/Z|[+-]\d{2}:\d{2}$/.test(startStr)) {
+    startStr = `${startStr.replace(' ', 'T')}Z`;
+  }
+  const start = new Date(startStr).getTime();
+  if (Number.isNaN(start)) return null;
+  return new Date(start + session.duration_minutes * 60 * 1000);
+}
+
 export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessionExpired }) {
   const session = device.active_session;
   const isBusy = session && session.status === 'active';
@@ -34,17 +47,20 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
     quad: { label: t('quad'), icon: Users, count: 4 },
   };
 
+  const isOpenSession = isBusy && session?.is_open_session;
+
   const endTime = useMemo(() => {
-    if (!isBusy || !session) return null;
-    const start = new Date(session.start_time).getTime();
-    return new Date(start + session.duration_minutes * 60 * 1000);
-  }, [isBusy, session]);
+    if (!isBusy || !session || isOpenSession) return null;
+    return getSessionEndTime(session);
+  }, [isBusy, session, isOpenSession]);
 
   const handleExpire = useCallback(() => {
     if (onSessionExpired) onSessionExpired(device, session);
   }, [device, session, onSessionExpired]);
 
-  const timer = useTimer(endTime, handleExpire);
+  const countdown = useTimer(endTime, handleExpire);
+  const elapsed = useElapsedTimer(isOpenSession ? session?.start_time : null);
+  const timer = isOpenSession ? elapsed : countdown;
 
   const sessionInfo = isBusy ? SESSION_TYPE_LABELS[session.session_type] || SESSION_TYPE_LABELS.dual : null;
 
@@ -77,15 +93,31 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
             <div className="device-card-badge device-card-badge--session">
               <Users size={12} />
               <span>{sessionInfo?.label}</span>
+              {isOpenSession && (
+                <span className="device-card-badge device-card-badge--open">{t('open_session')}</span>
+              )}
             </div>
-            <div className={`device-card-timer ${timer.totalSeconds <= 300 ? 'device-card-timer--warning' : ''}`}>
-              <Clock size={14} />
-              <div className="device-card-timer-digits">
-                <span className="timer-digit">{String(timer.hours).padStart(2, '0')}</span>
-                <span className="timer-sep">:</span>
-                <span className="timer-digit">{String(timer.minutes).padStart(2, '0')}</span>
-                <span className="timer-sep">:</span>
-                <span className="timer-digit">{String(timer.seconds).padStart(2, '0')}</span>
+            <div
+              className={`device-card-timer ${!isOpenSession && timer.totalSeconds <= 300 ? 'device-card-timer--warning' : ''} ${isOpenSession ? 'device-card-timer--open' : ''}`}
+              aria-live="polite"
+              aria-label={isOpenSession ? t('elapsed_time') : t('time_remaining')}
+            >
+              <Clock size={14} className="device-card-timer-icon" />
+              <div className="device-card-timer-body">
+                <span className="device-card-timer-label">
+                  {isOpenSession ? t('elapsed_time') : t('time_remaining')}
+                </span>
+                <div className="device-card-timer-digits" key={timer.seconds}>
+                  {timer.hours > 0 && (
+                    <>
+                      <span className="timer-digit">{String(timer.hours).padStart(2, '0')}</span>
+                      <span className="timer-sep">:</span>
+                    </>
+                  )}
+                  <span className="timer-digit">{String(timer.minutes).padStart(2, '0')}</span>
+                  <span className="timer-sep">:</span>
+                  <span className="timer-digit timer-digit--seconds">{String(timer.seconds).padStart(2, '0')}</span>
+                </div>
               </div>
             </div>
             <div className="device-card-start-time">

@@ -10,27 +10,35 @@ export function useTimer(endTime, onExpire) {
   const [remaining, setRemaining] = useState(() => calcRemaining(endTime));
   const expiredRef = useRef(false);
   const intervalRef = useRef(null);
+  const wasExpiredOnMountRef = useRef(false);
 
   const stableOnExpire = useCallback(() => {
     if (onExpire) onExpire();
   }, [onExpire]);
 
   useEffect(() => {
-    expiredRef.current = false;
-    setRemaining(calcRemaining(endTime));
-
-    intervalRef.current = setInterval(() => {
+    const tick = () => {
       const r = calcRemaining(endTime);
       setRemaining(r);
 
-      if (r.totalSeconds <= 0 && !expiredRef.current) {
+      if (r.totalSeconds <= 0 && !expiredRef.current && !wasExpiredOnMountRef.current) {
         expiredRef.current = true;
         stableOnExpire();
-        clearInterval(intervalRef.current);
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(intervalRef.current);
+    const initialRemaining = calcRemaining(endTime);
+    wasExpiredOnMountRef.current = initialRemaining.totalSeconds <= 0;
+    expiredRef.current = false;
+    setRemaining(initialRemaining);
+
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [endTime, stableOnExpire]);
 
   return remaining;

@@ -62,6 +62,19 @@
   border: 1px solid rgba(123, 97, 255, 0.3);
 }
 
+.invoice-value--struck {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.invoice-value--credit {
+  color: var(--cyber-success);
+}
+
+.invoice-row--adjustment .invoice-label {
+  color: var(--cyber-success);
+}
+
 .invoice-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--cyber-border), transparent);

@@ -4,7 +4,7 @@ import { CyberTable, CyberPagination } from '../components/shared/CyberTable';
 import { CyberButton } from '../components/shared/CyberButton';
 import { CyberInput } from '../components/shared/CyberInput';
 import { CyberModal } from '../components/shared/CyberModal';
-import { productsAPI } from '../lib/api';
+import { productsAPI, healthAPI } from '../lib/api';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -19,11 +19,12 @@ export function Products() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [inventoryReady, setInventoryReady] = useState(true);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [form, setForm] = useState({ name: '', purchase_price: '', selling_price: '' });
+  const [form, setForm] = useState({ name: '', purchase_price: '', selling_price: '', quantity: '' });
 
   const { t } = useLanguage();
 
@@ -44,11 +45,17 @@ export function Products() {
 
   useEffect(() => { loadProducts(); }, [loadProducts]);
 
+  useEffect(() => {
+    healthAPI.check()
+      .then((h) => setInventoryReady(Boolean(h?.inventory_enabled)))
+      .catch(() => setInventoryReady(false));
+  }, []);
+
   useEffect(() => { setPage(1); }, [search]);
 
   const openCreate = () => {
     setEditingProduct(null);
-    setForm({ name: '', purchase_price: '', selling_price: '' });
+    setForm({ name: '', purchase_price: '', selling_price: '', quantity: '' });
     setModalOpen(true);
   };
 
@@ -58,6 +65,7 @@ export function Products() {
       name: product.name,
       purchase_price: String(product.purchase_price),
       selling_price: String(product.selling_price),
+      quantity: String(product.quantity ?? 0),
     });
     setModalOpen(true);
   };
@@ -67,15 +75,22 @@ export function Products() {
       name: form.name,
       purchase_price: parseFloat(form.purchase_price) || 0,
       selling_price: parseFloat(form.selling_price) || 0,
+      quantity: Math.max(0, parseInt(form.quantity, 10) || 0),
     };
     try {
+      let saved;
       if (editingProduct) {
-        await productsAPI.update(editingProduct.id, data);
+        saved = await productsAPI.update(editingProduct.id, data);
       } else {
-        await productsAPI.create(data);
+        saved = await productsAPI.create(data);
+      }
+      if (typeof saved?.quantity !== 'number' || saved.quantity !== data.quantity) {
+        alert(t('quantity_not_saved'));
+        return;
       }
       setModalOpen(false);
       loadProducts();
+      window.dispatchEvent(new Event('inventory-changed'));
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -100,12 +115,19 @@ export function Products() {
     }
   };
 
-  const exportData = (format) => {
-    const rows = products.map(p => ({
+  const exportData = async (format) => {
+    let exportList = products;
+    try {
+      exportList = await productsAPI.list({ search, page: 1, page_size: 1000 });
+    } catch (err) {
+      console.error('Export fetch failed:', err);
+    }
+    const rows = exportList.map(p => ({
       ID: p.id,
       [t('product_name')]: p.name,
       [t('purchase_price')]: p.purchase_price,
       [t('selling_price')]: p.selling_price,
+      [t('available_quantity')]: Number(p.quantity) || 0,
       [t('status')]: p.is_active ? t('active') : t('disabled'),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -136,6 +158,19 @@ export function Products() {
       render: (val) => <span style={{ color: 'var(--cyber-cyan)' }}>{val.toLocaleString()} {t('syp')}</span>,
     },
     {
+      key: 'quantity',
+      label: t('quantity'),
+      render: (val, row) => {
+        if (val === 0) {
+          return <span className="cyber-badge cyber-badge--danger">{t('out_of_stock')}</span>;
+        }
+        if (row.is_low_stock) {
+          return <span className="cyber-badge cyber-badge--warning">{val} — {t('low_stock')}</span>;
+        }
+        return <span>{val}</span>;
+      },
+    },
+    {
       key: 'is_active',
       label: t('status'),
       render: (val) => (
@@ -154,6 +189,13 @@ export function Products() {
         <h1>{t('products')}</h1>
         <p>{t('manage_products')}</p>
       </div>
+
+      {!inventoryReady && (
+        <div className="products-backend-warning" role="alert">
+          <strong>{t('backend_outdated')}</strong>
+          <p>{t('backend_outdated_desc')}</p>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="cyber-toolbar">
@@ -200,6 +242,13 @@ export function Products() {
             <CyberInput label={`${t('purchase_price')} (${t('syp')})`} type="number" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} />
             <CyberInput label={`${t('selling_price')} (${t('syp')})`} type="number" value={form.selling_price} onChange={(e) => setForm({ ...form, selling_price: e.target.value })} />
           </div>
+          <CyberInput
+            label={t('available_quantity')}
+            type="number"
+            min="0"
+            value={form.quantity}
+            onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+          />
         </div>
         <div className="cyber-modal-footer">
           <CyberButton variant="ghost" onClick={() => setModalOpen(false)}>{t('cancel')}</CyberButton>

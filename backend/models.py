@@ -34,7 +34,7 @@ class DeviceType(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    devices = relationship("Device", back_populates="device_type")
+    devices = relationship("Device", back_populates="device_type", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class Device(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     device_type = relationship("DeviceType", back_populates="devices")
-    sessions = relationship("Session", back_populates="device")
+    sessions = relationship("Session", back_populates="device", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -63,10 +63,12 @@ class Product(Base):
     name = Column(String(200), nullable=False)
     purchase_price = Column(Float, default=0.0)
     selling_price = Column(Float, default=0.0)
+    quantity = Column(Integer, default=0)
+    initial_quantity = Column(Integer, default=0)  # baseline for 10% low-stock alert
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    session_products = relationship("SessionProduct", back_populates="product")
+    session_products = relationship("SessionProduct", back_populates="product", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -78,16 +80,19 @@ class Session(Base):
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=False)
     start_time = Column(DateTime, default=datetime.utcnow)
-    duration_minutes = Column(Integer, nullable=False)
+    duration_minutes = Column(Integer, nullable=False)  # booked duration; 0 when open session
+    actual_minutes = Column(Integer, nullable=True)  # elapsed at end; billable may differ
+    is_open_session = Column(Boolean, default=False)  # billed by time used when closed
     session_type = Column(String(20), nullable=False)  # dual / triple / quad
-    session_price = Column(Float, default=0.0)
+    booked_session_price = Column(Float, nullable=True)  # full price for booked time
+    session_price = Column(Float, default=0.0)  # final device charge (prorated if early end)
     total_cost = Column(Float, default=0.0)
     status = Column(String(20), default=SessionStatus.ACTIVE.value)
     ended_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     device = relationship("Device", back_populates="sessions")
-    products = relationship("SessionProduct", back_populates="session")
+    products = relationship("SessionProduct", back_populates="session", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------

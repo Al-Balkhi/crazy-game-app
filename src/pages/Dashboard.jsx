@@ -79,8 +79,10 @@ export function Dashboard() {
     try {
       await sessionsAPI.addProduct(sessionId, productData);
       await loadDevices();
+      window.dispatchEvent(new Event('inventory-changed'));
     } catch (err) {
-      alert('Failed to add product: ' + err.message);
+      alert(err.message || 'Failed to add product');
+      throw err;
     }
   };
 

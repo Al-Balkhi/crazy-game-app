@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Receipt, Clock, Users, Package, Printer } from 'lucide-react';
+import { Receipt, Package } from 'lucide-react';
 import { CyberModal } from '../shared/CyberModal';
 import { CyberButton } from '../shared/CyberButton';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -9,20 +8,27 @@ export function InvoiceModal({ isOpen, onClose, invoice }) {
   const { t } = useLanguage();
   if (!isOpen || !invoice) return null;
 
-  const startTime = new Date(invoice.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  const endTime = invoice.ended_at ? new Date(invoice.ended_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A';
+  const startTime = new Date(invoice.start_time).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const endTime = invoice.ended_at
+    ? new Date(invoice.ended_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : 'N/A';
+
+  const bookedPrice = invoice.booked_session_price ?? invoice.session_price;
+  const showEarlyEnd = invoice.early_end && bookedPrice > invoice.session_price;
 
   return (
     <CyberModal isOpen={isOpen} onClose={onClose} title={t('invoice')} size="lg">
       <div className="cyber-modal-body">
         <div className="invoice-container">
-          {/* Header */}
           <div className="invoice-header-section">
             <Receipt size={24} className="invoice-icon" />
             <h3>{t('session_complete')}</h3>
           </div>
 
-          {/* Device Info */}
           <div className="invoice-row">
             <span className="invoice-label">{t('device')}</span>
             <span className="invoice-value">{invoice.device_name}</span>
@@ -35,10 +41,23 @@ export function InvoiceModal({ isOpen, onClose, invoice }) {
             <span className="invoice-label">{t('session_type')}</span>
             <span className="invoice-value invoice-value--badge">{invoice.session_type.toUpperCase()}</span>
           </div>
-          <div className="invoice-row">
-            <span className="invoice-label">{t('duration')}</span>
-            <span className="invoice-value">{invoice.duration_minutes} min</span>
-          </div>
+          {invoice.is_open_session ? (
+            <div className="invoice-row">
+              <span className="invoice-label">{t('open_session')}</span>
+              <span className="invoice-value invoice-value--badge">{t('open_session').toUpperCase()}</span>
+            </div>
+          ) : (
+            <div className="invoice-row">
+              <span className="invoice-label">{t('booked_duration')}</span>
+              <span className="invoice-value">{invoice.duration_minutes} {t('minutes')}</span>
+            </div>
+          )}
+          {invoice.actual_minutes != null && (invoice.is_open_session || invoice.actual_minutes !== invoice.duration_minutes) && (
+            <div className="invoice-row">
+              <span className="invoice-label">{t('actual_duration')}</span>
+              <span className="invoice-value">{invoice.actual_minutes} {t('minutes')}</span>
+            </div>
+          )}
           <div className="invoice-row">
             <span className="invoice-label">{t('time')}</span>
             <span className="invoice-value">{startTime} → {endTime}</span>
@@ -46,13 +65,27 @@ export function InvoiceModal({ isOpen, onClose, invoice }) {
 
           <div className="invoice-divider" />
 
-          {/* Session Price */}
+          {showEarlyEnd && (
+            <>
+              <div className="invoice-row invoice-row--muted">
+                <span className="invoice-label">{t('booked_price')}</span>
+                <span className="invoice-value invoice-value--struck">
+                  {bookedPrice.toLocaleString()} {t('syp')}
+                </span>
+              </div>
+              <div className="invoice-row invoice-row--adjustment">
+                <span className="invoice-label">{t('early_end_adjustment')}</span>
+                <span className="invoice-value invoice-value--credit">
+                  −{(bookedPrice - invoice.session_price).toLocaleString()} {t('syp')}
+                </span>
+              </div>
+            </>
+          )}
           <div className="invoice-row">
             <span className="invoice-label">{t('session_price')}</span>
             <span className="invoice-value">{invoice.session_price.toLocaleString()} {t('syp')}</span>
           </div>
 
-          {/* Products */}
           {invoice.products && invoice.products.length > 0 && (
             <>
               <div className="invoice-products-header">
@@ -74,7 +107,6 @@ export function InvoiceModal({ isOpen, onClose, invoice }) {
 
           <div className="invoice-divider invoice-divider--strong" />
 
-          {/* Total */}
           <div className="invoice-total-row">
             <span>{t('total_cost')}</span>
             <span>{invoice.total_cost.toLocaleString()} {t('syp')}</span>

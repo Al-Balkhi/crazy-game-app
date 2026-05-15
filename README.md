@@ -1,16 +1,51 @@
-# React + Vite
+# Crazy Game Lounge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Desktop app for managing gaming lounge devices, sessions, products, and billing.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Frontend + Electron (dev)**
 
-## React Compiler
+```bash
+npm install
+npm run electron:dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Backend** (required in dev — Electron does not auto-start the API):
 
-## Expanding the ESLint configuration
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --port 8000
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Production build (Windows installer)
+
+1. Install dependencies:
+   - Node.js 18+
+   - Python 3.10+ with `pip install -r backend/requirements.txt pyinstaller`
+
+2. Build the installer:
+
+```bash
+npm install
+npm run electron:build
+```
+
+This will:
+- Compile `backend.exe` into `backend/dist/`
+- Build the React UI into `dist/`
+- Package everything with electron-builder
+
+**Output:** `dist-electron/Crazy Game Setup x.x.x.exe`
+
+## Data
+
+SQLite database: `%USERPROFILE%\.crazy_game_app\crazy_game.db`
+
+## Features
+
+- Device sessions (fixed duration, open session, early-end proration)
+- Products with stock quantity and low-stock alerts (10% threshold)
+- Optional password protection for settings
+- Arabic / English UI

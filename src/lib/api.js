@@ -1,17 +1,50 @@
 const API_BASE = 'http://localhost:8000';
 
+function formatErrorDetail(detail) {
+  if (!detail) return null;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item.msg || item.message || JSON.stringify(item)).join(', ');
+  }
+  if (typeof detail === 'object' && detail.message) return detail.message;
+  return String(detail);
+}
+
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const config = {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
   };
-  const res = await fetch(url, config);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(err.detail || `HTTP ${res.status}`);
+
+  let res;
+  try {
+    res = await fetch(url, config);
+  } catch (error) {
+    if (error.name === 'TypeError') {
+      throw new Error('Network error: Unable to connect to server. Is the backend running?');
+    }
+    throw error;
   }
-  return res.json();
+
+  if (!res.ok) {
+    let errorMessage = res.statusText || `HTTP ${res.status}`;
+    try {
+      const errorData = await res.json();
+      errorMessage = formatErrorDetail(errorData.detail) || errorMessage;
+    } catch {
+      // Non-JSON error body — keep status text
+    }
+    throw new Error(errorMessage);
+  }
+
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 // ── Device Types ────────────────────────────────────────────────
@@ -30,6 +63,11 @@ export const devicesAPI = {
   update: (id, data) => request(`/devices/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => request(`/devices/${id}`, { method: 'DELETE' }),
   toggle: (id) => request(`/devices/${id}/toggle`, { method: 'PATCH' }),
+};
+
+// ── Health ──────────────────────────────────────────────────────
+export const healthAPI = {
+  check: () => request('/health'),
 };
 
 // ── Products ────────────────────────────────────────────────────
@@ -52,6 +90,7 @@ export const productsAPI = {
   update: (id, data) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => request(`/products/${id}`, { method: 'DELETE' }),
   toggle: (id) => request(`/products/${id}/toggle`, { method: 'PATCH' }),
+  lowStock: () => request('/products/alerts/low-stock'),
 };
 
 // ── Sessions ────────────────────────────────────────────────────

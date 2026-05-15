@@ -427,6 +427,12 @@ body.rtl .cyber-select {
   border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
+.cyber-badge--warning {
+  background: rgba(255, 170, 0, 0.15);
+  color: #ffaa00;
+  border: 1px solid rgba(255, 170, 0, 0.35);
+}
+
 .cyber-badge--danger {
   background: rgba(255, 51, 102, 0.15);
   color: var(--cyber-danger);

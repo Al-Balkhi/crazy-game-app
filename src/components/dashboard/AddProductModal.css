@@ -39,6 +39,22 @@
   background: rgba(0, 209, 255, 0.06);
 }
 
+.add-product-item--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.add-product-item-stock {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--cyber-text-dim);
+  margin-top: 2px;
+}
+
+.add-product-item-stock--low {
+  color: #ffaa00;
+}
+
 .add-product-item-info {
   display: flex;
   flex-direction: column;
