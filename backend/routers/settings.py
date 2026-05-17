@@ -100,3 +100,42 @@ def get_monthly_report(
         "total_sessions": len(sessions),
         "total_products_sold": total_products_sold,
     }
+
+
+@router.get("/reports/daily")
+def get_daily_report(
+    year: int = Query(...),
+    month: int = Query(..., ge=1, le=12),
+    day: int = Query(..., ge=1, le=31),
+    db: Session = Depends(get_db),
+):
+    # Sessions completed on the given day
+    sessions = (
+        db.query(GameSession)
+        .filter(
+            GameSession.status == SessionStatus.COMPLETED.value,
+            extract("year", GameSession.start_time) == year,
+            extract("month", GameSession.start_time) == month,
+            extract("day", GameSession.start_time) == day,
+        )
+        .all()
+    )
+
+    device_revenue = sum(s.session_price for s in sessions)
+    product_revenue = 0.0
+    total_products_sold = 0
+
+    for s in sessions:
+        for sp in s.products:
+            product_revenue += sp.unit_price * sp.quantity
+            total_products_sold += sp.quantity
+
+    return {
+        "day": f"{year}-{month:02d}-{day:02d}",
+        "device_revenue": device_revenue,
+        "product_revenue": product_revenue,
+        "total_income": device_revenue + product_revenue,
+        "total_sessions": len(sessions),
+        "total_products_sold": total_products_sold,
+    }
+

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { productsAPI } from '../../lib/api';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useNotify } from '../../contexts/NotifyContext';
 import './LowStockBanner.css';
 
 const POLL_MS = 60_000;
@@ -10,20 +11,38 @@ const POLL_MS = 60_000;
 export function LowStockBanner() {
   const [items, setItems] = useState([]);
   const { t } = useLanguage();
+  const notify = useNotify();
   const navigate = useNavigate();
+  const knownLowStockRef = useRef(new Set());
 
-  const load = useCallback(async (notify = false) => {
+  const showLowStockAlert = useCallback((products) => {
+    if (!products.length) return;
+    const names = products.map((p) => p.name).join(', ');
+    const message =
+      products.length === 1
+        ? `${names} — ${t('low_stock_detail')}`
+        : `${products.length} ${t('products')}: ${names}\n${t('low_stock_detail')}`;
+
+    notify.warning(message, { title: t('low_stock_alert') });
+  }, [notify, t]);
+
+  const load = useCallback(async (checkForNewAlert = false) => {
     try {
       const data = await productsAPI.lowStock();
       setItems(data);
-      if (notify && data.length > 0) {
-        const names = data.map((p) => p.name).join(', ');
-        alert(`${t('low_stock_alert')}: ${names}\n${t('low_stock_detail')}`);
+
+      if (checkForNewAlert && data.length > 0) {
+        const newlyLow = data.filter((p) => !knownLowStockRef.current.has(p.id));
+        if (newlyLow.length > 0) {
+          showLowStockAlert(newlyLow);
+        }
       }
+
+      knownLowStockRef.current = new Set(data.map((p) => p.id));
     } catch {
       setItems([]);
     }
-  }, [t]);
+  }, [showLowStockAlert]);
 
   useEffect(() => {
     load(false);

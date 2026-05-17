@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Settings, Clock, Globe } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useSettings } from '../../contexts/SettingsContext';
+import { formatTime } from '../../lib/utils';
 import './Navbar.css';
 
 const pageTitles = {
@@ -16,6 +18,7 @@ export function Navbar() {
   const location = useLocation();
   const [time, setTime] = useState(new Date());
   const { t, lang, toggleLanguage } = useLanguage();
+  const { timeFormat } = useSettings();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -39,12 +42,7 @@ export function Navbar() {
           <div className="navbar-clock">
             <Clock size={14} />
             <span className="navbar-clock-time">
-              {time.toLocaleTimeString(lang === 'ar' ? 'ar-SY' : 'en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-              })}
+              {formatTime(time, timeFormat, true)}
             </span>
           </div>
 

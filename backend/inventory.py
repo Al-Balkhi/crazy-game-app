@@ -18,6 +18,7 @@ def product_to_response(product) -> dict:
     """Build API dict with computed is_low_stock."""
     qty = product.quantity or 0
     initial = product.initial_quantity or 0
+    refills = getattr(product, 'refill_count', 0) or 0
     return {
         "id": product.id,
         "name": product.name,
@@ -25,6 +26,7 @@ def product_to_response(product) -> dict:
         "selling_price": product.selling_price,
         "quantity": qty,
         "initial_quantity": initial,
+        "refill_count": refills,
         "is_low_stock": is_low_stock(qty, initial),
         "is_active": product.is_active,
     }

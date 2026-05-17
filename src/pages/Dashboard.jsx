@@ -3,10 +3,12 @@ import { DeviceCard } from '../components/dashboard/DeviceCard';
 import { BookingModal } from '../components/dashboard/BookingModal';
 import { InvoiceModal } from '../components/dashboard/InvoiceModal';
 import { AddProductModal } from '../components/dashboard/AddProductModal';
+import { SessionInfoModal } from '../components/dashboard/SessionInfoModal';
 import { devicesAPI, sessionsAPI } from '../lib/api';
 import { useSound } from '../hooks/useSound';
 import { Monitor } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNotify } from '../contexts/NotifyContext';
 import './Dashboard.css';
 
 export function Dashboard() {
@@ -17,9 +19,11 @@ export function Dashboard() {
   const [bookingDevice, setBookingDevice] = useState(null);
   const [invoiceData, setInvoiceData] = useState(null);
   const [addProductTarget, setAddProductTarget] = useState(null);
+  const [sessionInfoTarget, setSessionInfoTarget] = useState(null);
 
-  const { play: playSound } = useSound();
+  const { playLoop, stop: stopSound } = useSound();
   const { t } = useLanguage();
+  const notify = useNotify();
 
   const loadDevices = useCallback(async () => {
     try {
@@ -45,7 +49,7 @@ export function Dashboard() {
       setBookingDevice(null);
       await loadDevices();
     } catch (err) {
-      alert('Failed to start session: ' + err.message);
+      notify.error(err.message);
     }
   };
 
@@ -54,16 +58,17 @@ export function Dashboard() {
     try {
       await sessionsAPI.end(session.id);
       const invoice = await sessionsAPI.invoice(session.id);
+      playLoop();
       setInvoiceData(invoice);
       await loadDevices();
     } catch (err) {
-      alert('Failed to end session: ' + err.message);
+      notify.error(err.message);
     }
   };
 
   // Session expired
   const handleSessionExpired = useCallback(async (device, session) => {
-    playSound();
+    playLoop();
     try {
       await sessionsAPI.end(session.id);
       const invoice = await sessionsAPI.invoice(session.id);
@@ -72,7 +77,7 @@ export function Dashboard() {
     } catch (err) {
       console.error('Auto-end failed:', err);
     }
-  }, [playSound, loadDevices]);
+  }, [playLoop, loadDevices]);
 
   // Add product to session
   const handleAddProduct = async (sessionId, productData) => {
@@ -81,7 +86,7 @@ export function Dashboard() {
       await loadDevices();
       window.dispatchEvent(new Event('inventory-changed'));
     } catch (err) {
-      alert(err.message || 'Failed to add product');
+      notify.error(err.message || t('insufficient_stock'));
       throw err;
     }
   };
@@ -129,6 +134,7 @@ export function Dashboard() {
               onEndSession={handleEndSession}
               onAddProduct={(d, s) => setAddProductTarget({ device: d, session: s })}
               onSessionExpired={handleSessionExpired}
+              onViewSession={(d, s) => setSessionInfoTarget({ device: d, session: s })}
             />
           ))}
         </div>
@@ -144,7 +150,7 @@ export function Dashboard() {
 
       <InvoiceModal
         isOpen={!!invoiceData}
-        onClose={() => setInvoiceData(null)}
+        onClose={() => { stopSound(); setInvoiceData(null); }}
         invoice={invoiceData}
       />
 
@@ -153,6 +159,13 @@ export function Dashboard() {
         onClose={() => setAddProductTarget(null)}
         session={addProductTarget?.session}
         onAdd={handleAddProduct}
+      />
+
+      <SessionInfoModal
+        isOpen={!!sessionInfoTarget}
+        onClose={() => setSessionInfoTarget(null)}
+        device={sessionInfoTarget?.device}
+        session={sessionInfoTarget?.session}
       />
     </div>
   );

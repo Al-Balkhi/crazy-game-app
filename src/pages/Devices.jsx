@@ -6,6 +6,7 @@ import { CyberInput, CyberSelect } from '../components/shared/CyberInput';
 import { CyberModal } from '../components/shared/CyberModal';
 import { devicesAPI, deviceTypesAPI } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNotify } from '../contexts/NotifyContext';
 import '../components/shared/CyberShared.css';
 import './Devices.css';
 
@@ -20,6 +21,7 @@ export function Devices() {
   const [form, setForm] = useState({ name: '', device_type_id: '' });
 
   const { t } = useLanguage();
+  const notify = useNotify();
 
   const load = useCallback(async () => {
     try {
@@ -66,17 +68,17 @@ export function Devices() {
       setModalOpen(false);
       load();
     } catch (err) {
-      alert('Error: ' + err.message);
+      notify.error(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm(t('delete_confirm'))) return;
+    if (!(await notify.confirm(t('delete_confirm')))) return;
     try {
       await devicesAPI.delete(id);
       load();
     } catch (err) {
-      alert('Error: ' + err.message);
+      notify.error(err.message);
     }
   };
 
@@ -85,7 +87,7 @@ export function Devices() {
       await devicesAPI.toggle(id);
       load();
     } catch (err) {
-      alert('Error: ' + err.message);
+      notify.error(err.message);
     }
   };
 

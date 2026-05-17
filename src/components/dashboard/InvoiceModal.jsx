@@ -2,20 +2,17 @@ import { Receipt, Package } from 'lucide-react';
 import { CyberModal } from '../shared/CyberModal';
 import { CyberButton } from '../shared/CyberButton';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useSettings } from '../../contexts/SettingsContext';
+import { formatTime } from '../../lib/utils';
 import './InvoiceModal.css';
 
 export function InvoiceModal({ isOpen, onClose, invoice }) {
   const { t } = useLanguage();
+  const { timeFormat } = useSettings();
   if (!isOpen || !invoice) return null;
 
-  const startTime = new Date(invoice.start_time).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const endTime = invoice.ended_at
-    ? new Date(invoice.ended_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-    : 'N/A';
+  const startTime = formatTime(invoice.start_time, timeFormat);
+  const endTime = invoice.ended_at ? formatTime(invoice.ended_at, timeFormat) : 'N/A';
 
   const bookedPrice = invoice.booked_session_price ?? invoice.session_price;
   const showEarlyEnd = invoice.early_end && bookedPrice > invoice.session_price;

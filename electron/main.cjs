@@ -73,11 +73,12 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     title: 'Crazy Game Lounge',
-    icon: path.join(__dirname, '..', 'public', 'favicon.svg'),
+    icon: path.join(__dirname, '..', 'public', 'favicon.ico'),
     backgroundColor: '#081221',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     },
     // Frameless for a more immersive gaming feel (optional)
     // frame: false,

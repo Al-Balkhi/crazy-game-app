@@ -33,7 +33,7 @@ function getSessionEndTime(session) {
   return new Date(start + session.duration_minutes * 60 * 1000);
 }
 
-export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessionExpired }) {
+export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessionExpired, onViewSession }) {
   const session = device.active_session;
   const isBusy = session && session.status === 'active';
   const typeName = device.device_type?.name || 'Device';
@@ -70,8 +70,9 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
       id={`device-card-${device.id}`}
       onClick={() => {
         if (!isBusy && device.is_active && onBook) onBook(device);
+        if (isBusy && onViewSession) onViewSession(device, session);
       }}
-      style={{ cursor: !isBusy && device.is_active ? 'pointer' : 'default' }}
+      style={{ cursor: (!isBusy && device.is_active) || isBusy ? 'pointer' : 'default' }}
     >
       <div className="device-card-accent" />
       <div className="device-card-header">

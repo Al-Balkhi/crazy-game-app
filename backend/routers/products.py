@@ -10,11 +10,14 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 
 def _set_product_quantity(product: Product, new_qty: int) -> None:
-    """Update stock and baseline for low-stock alerts."""
+    """Update stock and baseline for low-stock alerts. Track refills."""
     new_qty = max(0, int(new_qty))
     current = product.quantity if product.quantity is not None else 0
     initial = product.initial_quantity if product.initial_quantity is not None else 0
     if new_qty > current:
+        # If restocking (qty going up), increment refill counter
+        if initial > 0 and current < initial:
+            product.refill_count = (product.refill_count or 0) + 1
         product.initial_quantity = new_qty
     elif initial == 0 and new_qty > 0:
         product.initial_quantity = new_qty

@@ -65,6 +65,7 @@ class Product(Base):
     selling_price = Column(Float, default=0.0)
     quantity = Column(Integer, default=0)
     initial_quantity = Column(Integer, default=0)  # baseline for 10% low-stock alert
+    refill_count = Column(Integer, default=0)  # tracks how many times product has been restocked
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

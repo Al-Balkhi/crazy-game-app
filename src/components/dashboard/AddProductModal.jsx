@@ -4,6 +4,7 @@ import { CyberModal } from '../shared/CyberModal';
 import { CyberButton } from '../shared/CyberButton';
 import { productsAPI } from '../../lib/api';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useNotify } from '../../contexts/NotifyContext';
 import './AddProductModal.css';
 
 export function AddProductModal({ isOpen, onClose, session, onAdd }) {
@@ -11,6 +12,7 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState({});
   const { t } = useLanguage();
+  const notify = useNotify();
 
   useEffect(() => {
     if (isOpen) {
@@ -33,22 +35,50 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const maxQtyFor = (product) => {
-    const inCart = cart[product.id] || 0;
-    return Math.max(0, (product.quantity ?? 0) - inCart);
-  };
-
   const updateQty = (product, delta) => {
     const productId = product.id;
-    const max = maxQtyFor(product);
     setCart(prev => {
       const current = prev[productId] || 0;
-      const next = Math.min(max, Math.max(0, current + delta));
-      if (next === 0) {
+      const availableStock = product.quantity ?? 0;
+      
+      // Calculate the new quantity
+      const newQty = current + delta;
+      
+      // Ensure the new quantity is within valid bounds
+      const clampedQty = Math.min(availableStock, Math.max(0, newQty));
+      
+      if (clampedQty === 0) {
+        // Remove from cart if quantity becomes 0
         const { [productId]: _, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [productId]: next };
+      
+      return { ...prev, [productId]: clampedQty };
+    });
+  };
+
+  const setQtyDirect = (product, value) => {
+    const productId = product.id;
+    const availableStock = product.quantity ?? 0;
+    const parsed = parseInt(value, 10);
+
+    // Allow clearing the field (empty string) → treat as 0
+    if (value === '' || isNaN(parsed)) {
+      setCart(prev => {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+      });
+      return;
+    }
+
+    const clampedQty = Math.min(availableStock, Math.max(0, parsed));
+
+    setCart(prev => {
+      if (clampedQty === 0) {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [productId]: clampedQty };
     });
   };
 
@@ -65,7 +95,7 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
       window.dispatchEvent(new Event('inventory-changed'));
       onClose();
     } catch (err) {
-      alert(err.message || t('insufficient_stock'));
+      notify.error(err.message || t('insufficient_stock'));
     }
   };
 
@@ -88,7 +118,7 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
             const qty = cart[product.id] || 0;
             const stock = product.quantity ?? 0;
             const outOfStock = stock === 0;
-            const maxAdd = maxQtyFor(product);
+            const canAddMore = qty < stock;
             return (
               <div
                 key={product.id}
@@ -112,12 +142,20 @@ export function AddProductModal({ isOpen, onClose, session, onAdd }) {
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="add-product-qty">{qty}</span>
+                  <input
+                    type="number"
+                    className="add-product-qty-input"
+                    value={qty}
+                    min={0}
+                    max={stock}
+                    onChange={(e) => setQtyDirect(product, e.target.value)}
+                    disabled={outOfStock}
+                  />
                   <button
                     type="button"
                     className="add-product-qty-btn add-product-qty-btn--plus"
                     onClick={() => updateQty(product, 1)}
-                    disabled={outOfStock || maxAdd === 0}
+                    disabled={outOfStock || !canAddMore}
                   >
                     <Plus size={14} />
                   </button>

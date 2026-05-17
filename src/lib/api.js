@@ -112,4 +112,5 @@ export const settingsAPI = {
 // ── Reports ─────────────────────────────────────────────────────
 export const reportsAPI = {
   monthly: (year, month) => request(`/reports/monthly?year=${year}&month=${month}`),
+  daily: (year, month, day) => request(`/reports/daily?year=${year}&month=${month}&day=${day}`),
 };

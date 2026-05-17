@@ -5,7 +5,9 @@ Set-Location $PSScriptRoot
 if (-not (Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" | Out-Null }
 
 Write-Host "Building backend.exe with PyInstaller..."
+$iconPath = "$PSScriptRoot\..\public\favicon.ico"
 python -m PyInstaller --noconfirm --onefile --name backend --distpath dist --workpath build/pyinstaller --specpath build `
+  --icon="$iconPath" `
   --hidden-import=uvicorn.logging `
   --hidden-import=uvicorn.loops `
   --hidden-import=uvicorn.loops.auto `

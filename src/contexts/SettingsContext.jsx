@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { settingsAPI } from '../lib/api';
 
 const AUTH_SESSION_KEY = 'crazy_game_authenticated';
+const TIME_FORMAT_KEY = 'crazy_game_time_format';
 
 const SettingsContext = createContext(null);
 
@@ -9,6 +10,9 @@ export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [timeFormat, setTimeFormat] = useState(() => {
+    return localStorage.getItem(TIME_FORMAT_KEY) || '12h';
+  });
 
   const refreshSettings = useCallback(async () => {
     const data = await settingsAPI.get();
@@ -39,6 +43,11 @@ export function SettingsProvider({ children }) {
     setIsAuthenticated(true);
   }, []);
 
+  const setTimeFormatPreference = useCallback((format) => {
+    setTimeFormat(format);
+    localStorage.setItem(TIME_FORMAT_KEY, format);
+  }, []);
+
   const logout = useCallback(() => {
     sessionStorage.removeItem(AUTH_SESSION_KEY);
     setIsAuthenticated(false);
@@ -53,9 +62,11 @@ export function SettingsProvider({ children }) {
         loading,
         isAuthenticated,
         needsLogin,
+        timeFormat,
         refreshSettings,
         login,
         logout,
+        setTimeFormatPreference,
       }}
     >
       {children}

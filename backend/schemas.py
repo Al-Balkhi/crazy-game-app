@@ -81,6 +81,7 @@ class ProductResponse(BaseModel):
     selling_price: float
     quantity: int
     initial_quantity: int
+    refill_count: int = 0
     is_low_stock: bool = False
     is_active: bool
 
@@ -182,6 +183,15 @@ class AuthResponse(BaseModel):
 # ── Reports ──────────────────────────────────────────────────────────────────
 class MonthlyReportResponse(BaseModel):
     month: str
+    device_revenue: float
+    product_revenue: float
+    total_income: float
+    total_sessions: int
+    total_products_sold: int
+
+
+class DailyReportResponse(BaseModel):
+    day: str
     device_revenue: float
     product_revenue: float
     total_income: float

@@ -52,6 +52,7 @@ def migrate_schema():
         ("sessions", "is_open_session", "BOOLEAN DEFAULT 0"),
         ("products", "quantity", "INTEGER DEFAULT 0"),
         ("products", "initial_quantity", "INTEGER DEFAULT 0"),
+        ("products", "refill_count", "INTEGER DEFAULT 0"),
     ]
     with engine.connect() as conn:
         for table, column, col_def in migrations:
