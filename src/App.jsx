@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Products } from './pages/Products';
 import { Devices } from './pages/Devices';
 import { Settings } from './pages/Settings';
+import { InvoiceLog } from './pages/InvoiceLog';
 import { Login } from './pages/Login';
 import { useSettings } from './contexts/SettingsContext';
 import { useLanguage } from './contexts/LanguageContext';
@@ -25,6 +26,7 @@ function AppRoutes() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/devices" element={<Devices />} />
+            <Route path="/invoice-log" element={<InvoiceLog />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

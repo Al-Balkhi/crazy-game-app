@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { Monitor, Gamepad2, Cpu, ShoppingCart, Square, Clock, Users, Zap } from 'lucide-react';
+import { Monitor, Gamepad2, Cpu, ShoppingCart, Square, Clock, Users, Zap, Pause, Play } from 'lucide-react';
 import { useTimer } from '../../hooks/useTimer';
 import { useElapsedTimer } from '../../hooks/useElapsedTimer';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -33,9 +33,19 @@ function getSessionEndTime(session) {
   return new Date(start + session.duration_minutes * 60 * 1000);
 }
 
-export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessionExpired, onViewSession }) {
+export function DeviceCard({
+  device,
+  onBook,
+  onEndSession,
+  onPauseSession,
+  onResumeSession,
+  onAddProduct,
+  onSessionExpired,
+  onViewSession,
+}) {
   const session = device.active_session;
-  const isBusy = session && session.status === 'active';
+  const isBusy = session && (session.status === 'active' || session.status === 'paused');
+  const isPaused = session?.status === 'paused';
   const typeName = device.device_type?.name || 'Device';
   const style = getDeviceStyle(typeName);
   const DeviceIcon = style.icon;
@@ -50,9 +60,9 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
   const isOpenSession = isBusy && session?.is_open_session;
 
   const endTime = useMemo(() => {
-    if (!isBusy || !session || isOpenSession) return null;
+    if (!isBusy || !session || isOpenSession || isPaused) return null;
     return getSessionEndTime(session);
-  }, [isBusy, session, isOpenSession]);
+  }, [isBusy, session, isOpenSession, isPaused]);
 
   const handleExpire = useCallback(() => {
     if (onSessionExpired) onSessionExpired(device, session);
@@ -64,9 +74,16 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
 
   const sessionInfo = isBusy ? SESSION_TYPE_LABELS[session.session_type] || SESSION_TYPE_LABELS.dual : null;
 
+  const cardClass = [
+    'device-card',
+    style.className,
+    isPaused ? 'device-card--paused' : isBusy ? 'device-card--busy' : 'device-card--available',
+    !device.is_active ? 'device-card--disabled' : '',
+  ].filter(Boolean).join(' ');
+
   return (
     <div
-      className={`device-card ${style.className} ${isBusy ? 'device-card--busy' : 'device-card--available'} ${!device.is_active ? 'device-card--disabled' : ''}`}
+      className={cardClass}
       id={`device-card-${device.id}`}
       onClick={() => {
         if (!isBusy && device.is_active && onBook) onBook(device);
@@ -97,30 +114,43 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
               {isOpenSession && (
                 <span className="device-card-badge device-card-badge--open">{t('open_session')}</span>
               )}
+              {isPaused && (
+                <span className="device-card-badge device-card-badge--paused">{t('paused')}</span>
+              )}
             </div>
-            <div
-              className={`device-card-timer ${!isOpenSession && timer.totalSeconds <= 300 ? 'device-card-timer--warning' : ''} ${isOpenSession ? 'device-card-timer--open' : ''}`}
-              aria-live="polite"
-              aria-label={isOpenSession ? t('elapsed_time') : t('time_remaining')}
-            >
-              <Clock size={14} className="device-card-timer-icon" />
-              <div className="device-card-timer-body">
-                <span className="device-card-timer-label">
-                  {isOpenSession ? t('elapsed_time') : t('time_remaining')}
-                </span>
-                <div className="device-card-timer-digits" key={timer.seconds}>
-                  {timer.hours > 0 && (
-                    <>
-                      <span className="timer-digit">{String(timer.hours).padStart(2, '0')}</span>
-                      <span className="timer-sep">:</span>
-                    </>
-                  )}
-                  <span className="timer-digit">{String(timer.minutes).padStart(2, '0')}</span>
-                  <span className="timer-sep">:</span>
-                  <span className="timer-digit timer-digit--seconds">{String(timer.seconds).padStart(2, '0')}</span>
+            {!isPaused && (
+              <div
+                className={`device-card-timer ${!isOpenSession && timer.totalSeconds <= 300 ? 'device-card-timer--warning' : ''} ${isOpenSession ? 'device-card-timer--open' : ''}`}
+                aria-live="polite"
+                aria-label={isOpenSession ? t('elapsed_time') : t('time_remaining')}
+              >
+                <Clock size={14} className="device-card-timer-icon" />
+                <div className="device-card-timer-body">
+                  <span className="device-card-timer-label">
+                    {isOpenSession ? t('elapsed_time') : t('time_remaining')}
+                  </span>
+                  <div className="device-card-timer-digits" key={timer.seconds}>
+                    {timer.hours > 0 && (
+                      <>
+                        <span className="timer-digit">{String(timer.hours).padStart(2, '0')}</span>
+                        <span className="timer-sep">:</span>
+                      </>
+                    )}
+                    <span className="timer-digit">{String(timer.minutes).padStart(2, '0')}</span>
+                    <span className="timer-sep">:</span>
+                    <span className="timer-digit timer-digit--seconds">{String(timer.seconds).padStart(2, '0')}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+            {isPaused && (
+              <div className="device-card-timer device-card-timer--paused">
+                <Pause size={14} className="device-card-timer-icon" />
+                <div className="device-card-timer-body">
+                  <span className="device-card-timer-label">{t('paused')}</span>
+                </div>
+              </div>
+            )}
             <div className="device-card-start-time">
               <Zap size={12} />
               <span>{t('started')} {new Date(session.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
@@ -134,6 +164,25 @@ export function DeviceCard({ device, onBook, onEndSession, onAddProduct, onSessi
                 <ShoppingCart size={14} />
                 <span>{t('add_items')}</span>
               </button>
+              {isPaused ? (
+                <button
+                  className="device-card-action-btn device-card-action-btn--resume"
+                  onClick={(e) => { e.stopPropagation(); onResumeSession && onResumeSession(device, session); }}
+                  title={t('resume_session')}
+                >
+                  <Play size={14} />
+                  <span>{t('resume_session')}</span>
+                </button>
+              ) : (
+                <button
+                  className="device-card-action-btn device-card-action-btn--pause"
+                  onClick={(e) => { e.stopPropagation(); onPauseSession && onPauseSession(device, session); }}
+                  title={t('pause_session')}
+                >
+                  <Pause size={14} />
+                  <span>{t('pause_session')}</span>
+                </button>
+              )}
               <button
                 className="device-card-action-btn device-card-action-btn--end"
                 onClick={(e) => { e.stopPropagation(); onEndSession && onEndSession(device, session); }}

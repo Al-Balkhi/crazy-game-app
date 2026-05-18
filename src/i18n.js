@@ -20,8 +20,12 @@ export const translations = {
     players_3: '3 Players',
     players_4: '4 Players',
     started: 'Started',
+    ended: 'Ended',
     add_items: 'Add Items',
     end_session: 'End',
+    pause_session: 'Pause',
+    resume_session: 'Resume',
+    paused: 'Paused',
     disabled: 'Disabled',
 
     // Modals
@@ -62,6 +66,9 @@ export const translations = {
     add_products: 'Add Products',
     search_products: 'Search products...',
     add_to_session: 'Add to Session',
+    remove: 'Remove',
+    no_products_yet: 'No products added yet',
+    click_to_view_invoice: 'Click to view invoice',
     syp: 'SYP',
 
     // Products
@@ -152,6 +159,15 @@ export const translations = {
     day: 'Day',
     session_info: 'Session Information',
     report_auto_saved: 'Report auto-saved to program folder',
+    invoice_log: 'Invoice Log',
+    invoice_log_desc: 'Browse all completed session invoices',
+    no_invoices: 'No invoices found',
+    all: 'All',
+    today: 'Today',
+    this_week: 'This Week',
+    this_month: 'This Month',
+    records: 'records',
+    total_profit: 'Total Profit',
 
     // Common
     yes: 'Yes',
@@ -180,8 +196,12 @@ export const translations = {
     players_3: '3 لاعبين',
     players_4: '4 لاعبين',
     started: 'بدأ',
+    ended: 'انتهى',
     add_items: 'إضافة طلبات',
     end_session: 'إنهاء',
+    pause_session: 'إيقاف مؤقت',
+    resume_session: 'استئناف',
+    paused: 'موقوف مؤقتاً',
     disabled: 'معطل',
 
     // Modals
@@ -222,6 +242,9 @@ export const translations = {
     add_products: 'إضافة منتجات',
     search_products: 'ابحث عن المنتجات...',
     add_to_session: 'إضافة للجلسة',
+    remove: 'حذف',
+    no_products_yet: 'لم تتم إضافة منتجات بعد',
+    click_to_view_invoice: 'انقر لعرض الفاتورة',
     syp: 'ل.س',
 
     // Products
@@ -312,6 +335,15 @@ export const translations = {
     day: 'اليوم',
     session_info: 'معلومات الجلسة',
     report_auto_saved: 'تم حفظ التقرير تلقائياً في مجلد البرنامج',
+    invoice_log: 'سجل الفواتير',
+    invoice_log_desc: 'استعراض جميع فواتير الجلسات المكتملة',
+    no_invoices: 'لا توجد فواتير',
+    all: 'الكل',
+    today: 'اليوم',
+    this_week: 'هذا الأسبوع',
+    this_month: 'هذا الشهر',
+    records: 'سجل',
+    total_profit: 'الربح الإجمالي',
 
     // Common
     yes: 'نعم',

@@ -113,11 +113,16 @@ export function useSound() {
     }
   }, []);
 
-  /** Start looping alarm — plays every 2 seconds until stop() is called */
+  /** Start looping alarm — plays every 2 seconds. Automatically stops after 10 seconds. */
   const playLoop = useCallback(() => {
     stopAll();
     playOnce();
     loopRef.current = setInterval(playOnce, 2000);
+    
+    // Automatically stop after 10 seconds (10000 ms)
+    setTimeout(() => {
+      stopAll();
+    }, 10000);
   }, [playOnce, stopAll]);
 
   /** Play a single alarm burst (non-looping) */

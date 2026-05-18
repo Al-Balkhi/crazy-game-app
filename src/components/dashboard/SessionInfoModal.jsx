@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Monitor, Users, Clock, Zap, Package } from 'lucide-react';
+import { Monitor, Users, Clock, Zap, Package, Trash2, ShoppingCart, Pause, Play, Square } from 'lucide-react';
 import { CyberModal } from '../shared/CyberModal';
 import { CyberButton } from '../shared/CyberButton';
 import { sessionsAPI } from '../../lib/api';
@@ -8,19 +8,25 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { formatTime, formatDuration } from '../../lib/utils';
 import './SessionInfoModal.css';
 
-export function SessionInfoModal({ isOpen, onClose, device, session }) {
+export function SessionInfoModal({ isOpen, onClose, device, session, onAddProduct, onRemoveProduct, onPause, onResume, onEnd }) {
   const { t } = useLanguage();
   const { timeFormat } = useSettings();
   const [sessionDetail, setSessionDetail] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && session?.id) {
+  const loadDetail = () => {
+    if (session?.id) {
       setLoading(true);
       sessionsAPI.get(session.id)
         .then((data) => setSessionDetail(data))
         .catch((err) => console.error('Failed to load session:', err))
         .finally(() => setLoading(false));
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && session?.id) {
+      loadDetail();
     } else {
       setSessionDetail(null);
     }
@@ -28,6 +34,7 @@ export function SessionInfoModal({ isOpen, onClose, device, session }) {
 
   if (!isOpen || !session || !device) return null;
 
+  const isPaused = session.status === 'paused';
   const startTime = formatTime(session.start_time, timeFormat);
   const typeName = device.device_type?.name || t('unknown');
   const sessionTypeLabels = {
@@ -45,6 +52,13 @@ export function SessionInfoModal({ isOpen, onClose, device, session }) {
   const elapsedMs = Date.now() - startMs;
   const elapsedMin = Math.max(0, Math.floor(elapsedMs / 60000));
 
+  const handleRemove = async (sp) => {
+    if (onRemoveProduct) {
+      await onRemoveProduct(session.id, sp.id);
+      loadDetail(); // Refresh detail after removal
+    }
+  };
+
   return (
     <CyberModal isOpen={isOpen} onClose={onClose} title={t('session_info')} size="lg">
       <div className="cyber-modal-body">
@@ -53,6 +67,9 @@ export function SessionInfoModal({ isOpen, onClose, device, session }) {
             <Monitor size={24} className="session-info-icon" />
             <h3>{device.name}</h3>
             <span className="session-info-type-badge">{typeName}</span>
+            {isPaused && (
+              <span className="session-info-paused-badge">{t('paused')}</span>
+            )}
           </div>
 
           <div className="session-info-row">
@@ -107,16 +124,35 @@ export function SessionInfoModal({ isOpen, onClose, device, session }) {
             </span>
           </div>
 
-          {products.length > 0 && (
+          {/* Products Section */}
+          <div className="session-info-products-header">
+            <Package size={14} />
+            <span>{t('ordered_items')}</span>
+            <button
+              className="session-info-add-btn"
+              onClick={() => { onClose(); onAddProduct && onAddProduct(session); }}
+              title={t('add_items')}
+            >
+              <ShoppingCart size={14} />
+              <span>{t('add_items')}</span>
+            </button>
+          </div>
+
+          {products.length > 0 ? (
             <>
-              <div className="session-info-products-header">
-                <Package size={14} />
-                <span>{t('ordered_items')}</span>
-              </div>
               {products.map((p, i) => (
                 <div key={i} className="session-info-product-row">
                   <span>{p.product_name} × {p.quantity}</span>
-                  <span>{(p.unit_price * p.quantity).toLocaleString()} {t('syp')}</span>
+                  <span className="session-info-product-price">
+                    {(p.unit_price * p.quantity).toLocaleString()} {t('syp')}
+                  </span>
+                  <button
+                    className="session-info-remove-btn"
+                    onClick={() => handleRemove(p)}
+                    title={t('remove')}
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               ))}
               <div className="session-info-row">
@@ -126,19 +162,42 @@ export function SessionInfoModal({ isOpen, onClose, device, session }) {
                 </span>
               </div>
             </>
+          ) : (
+            <div className="session-info-empty-products">{t('no_products_yet')}</div>
           )}
 
           <div className="session-info-divider session-info-divider--strong" />
 
           <div className="session-info-total-row">
             <span>{t('total_cost')}</span>
-            <span>{(detail.total_cost || 0).toLocaleString()} {t('syp')}</span>
+            <span>{((detail.session_price || 0) + productsTotal).toLocaleString()} {t('syp')}</span>
           </div>
         </div>
       </div>
 
       <div className="cyber-modal-footer">
         <CyberButton variant="ghost" onClick={onClose}>{t('close')}</CyberButton>
+        {isPaused ? (
+          <CyberButton
+            variant="secondary"
+            onClick={() => { onClose(); onResume && onResume(device, session); }}
+          >
+            <Play size={14} /> {t('resume_session')}
+          </CyberButton>
+        ) : (
+          <CyberButton
+            variant="secondary"
+            onClick={() => { onClose(); onPause && onPause(device, session); }}
+          >
+            <Pause size={14} /> {t('pause_session')}
+          </CyberButton>
+        )}
+        <CyberButton
+          variant="danger"
+          onClick={() => { onClose(); onEnd && onEnd(device, session); }}
+        >
+          <Square size={14} /> {t('end_session')}
+        </CyberButton>
       </div>
     </CyberModal>
   );

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import extract, func
 from database import get_db
 from models import (
     Session as GameSession,
@@ -22,7 +23,8 @@ from pricing import (
     resolve_open_session_charge,
     resolve_session_charge,
 )
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Optional
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
@@ -97,6 +99,60 @@ def start_session(data: SessionCreate, db: Session = Depends(get_db)):
     return session
 
 
+@router.get("/", tags=["Sessions"])
+def list_sessions(
+    filter: Optional[str] = Query(None, description="day, week, month, or None for all"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """List completed sessions for the invoice log, newest first."""
+    q = (
+        db.query(GameSession)
+        .options(joinedload(GameSession.products), joinedload(GameSession.device))
+        .filter(GameSession.status == SessionStatus.COMPLETED.value)
+    )
+    now = datetime.utcnow()
+    if filter == "day":
+        q = q.filter(GameSession.ended_at >= now - timedelta(days=1))
+    elif filter == "week":
+        q = q.filter(GameSession.ended_at >= now - timedelta(weeks=1))
+    elif filter == "month":
+        q = q.filter(GameSession.ended_at >= now - timedelta(days=30))
+
+    total = q.count()
+    sessions = q.order_by(GameSession.ended_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    results = []
+    for s in sessions:
+        device = s.device
+        products_total = sum(sp.unit_price * sp.quantity for sp in s.products)
+        products_cost = sum(
+            (db.query(Product).filter(Product.id == sp.product_id).first().purchase_price or 0) * sp.quantity
+            for sp in s.products
+        )
+        # profit = revenue - cost_of_goods
+        # device cost is 0 (labour/fixed cost not tracked), so profit = session_price - products cost
+        profit = s.session_price + products_total - products_cost
+        results.append({
+            "session_id": s.id,
+            "device_name": device.name if device else "Unknown",
+            "device_type": device.device_type.name if device and device.device_type else "Unknown",
+            "session_type": s.session_type,
+            "is_open_session": bool(s.is_open_session),
+            "start_time": s.start_time,
+            "ended_at": s.ended_at,
+            "duration_minutes": s.duration_minutes,
+            "actual_minutes": s.actual_minutes,
+            "session_price": s.session_price,
+            "products_total": products_total,
+            "total_cost": s.total_cost,
+            "profit": profit,
+            "status": s.status,
+        })
+    return {"total": total, "page": page, "page_size": page_size, "items": results}
+
+
 @router.put("/{session_id}/end")
 def end_session(session_id: int, db: Session = Depends(get_db)):
     session = (
@@ -107,8 +163,15 @@ def end_session(session_id: int, db: Session = Depends(get_db)):
     )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.status != SessionStatus.ACTIVE.value:
-        raise HTTPException(status_code=400, detail="Session is not active")
+    if session.status not in (SessionStatus.ACTIVE.value, "paused"):
+        raise HTTPException(status_code=400, detail="Session is not active or paused")
+
+    # If it was paused, treat the paused time as the end point (no extra charge while paused)
+    if session.status == "paused" and session.paused_at:
+        # Use paused_at as the effective end time so paused time isn't billed
+        # but we still want to run the normal end logic with the current time
+        session.status = SessionStatus.ACTIVE.value
+        session.paused_at = None
 
     device = (
         db.query(Device)
@@ -304,3 +367,82 @@ def get_invoice(session_id: int, db: Session = Depends(get_db)):
         "products_total": products_total,
         "total_cost": session.total_cost,
     }
+
+
+@router.put("/{session_id}/pause")
+def pause_session(session_id: int, db: Session = Depends(get_db)):
+    """Pause an active session. Timer is frozen until resumed."""
+    session = db.query(GameSession).filter(GameSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.status != SessionStatus.ACTIVE.value:
+        raise HTTPException(status_code=400, detail="Session is not active")
+
+    session.status = "paused"
+    session.paused_at = datetime.utcnow()
+    db.commit()
+    return {"message": "Session paused", "paused_at": session.paused_at}
+
+
+@router.put("/{session_id}/resume")
+def resume_session(session_id: int, db: Session = Depends(get_db)):
+    """Resume a paused session. Extends the end time by the pause duration."""
+    session = db.query(GameSession).filter(GameSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.status != "paused":
+        raise HTTPException(status_code=400, detail="Session is not paused")
+
+    # Calculate how long the session was paused and extend start_time by that amount
+    # This effectively shifts the session window forward so the timer reflects real play time
+    if session.paused_at:
+        pause_duration = datetime.utcnow() - session.paused_at
+        session.start_time = session.start_time + pause_duration
+
+    session.status = SessionStatus.ACTIVE.value
+    session.paused_at = None
+    db.commit()
+    return {"message": "Session resumed", "new_start_time": session.start_time}
+
+
+@router.delete("/{session_id}/products/{session_product_id}")
+def remove_product_from_session(
+    session_id: int, session_product_id: int, db: Session = Depends(get_db)
+):
+    """Remove a product from an active session and restore the stock."""
+    session = (
+        db.query(GameSession)
+        .options(joinedload(GameSession.products))
+        .filter(GameSession.id == session_id)
+        .first()
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.status not in (SessionStatus.ACTIVE.value, "paused"):
+        raise HTTPException(status_code=400, detail="Session is not active or paused")
+
+    sp = db.query(SessionProduct).filter(
+        SessionProduct.id == session_product_id,
+        SessionProduct.session_id == session_id,
+    ).first()
+    if not sp:
+        raise HTTPException(status_code=404, detail="Session product not found")
+
+    # Restore inventory
+    product = db.query(Product).filter(Product.id == sp.product_id).first()
+    if product:
+        product.quantity = (product.quantity or 0) + sp.quantity
+
+    db.delete(sp)
+    db.flush()
+
+    # Recalculate total
+    remaining_products = db.query(SessionProduct).filter(
+        SessionProduct.session_id == session_id
+    ).all()
+    session.total_cost = session.session_price + sum(
+        p.unit_price * p.quantity for p in remaining_products
+    )
+    db.commit()
+    return {"message": "Product removed from session"}
+

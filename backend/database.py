@@ -53,6 +53,7 @@ def migrate_schema():
         ("products", "quantity", "INTEGER DEFAULT 0"),
         ("products", "initial_quantity", "INTEGER DEFAULT 0"),
         ("products", "refill_count", "INTEGER DEFAULT 0"),
+        ("sessions", "paused_at", "DATETIME"),
     ]
     with engine.connect() as conn:
         for table, column, col_def in migrations:

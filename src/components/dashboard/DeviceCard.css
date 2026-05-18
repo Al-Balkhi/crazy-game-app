@@ -113,6 +113,39 @@ body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   PAUSED STATE — Amber / yellow
+   ═══════════════════════════════════════════════════════════════ */
+
+.device-card--paused {
+  background: linear-gradient(165deg, rgba(255, 190, 0, 0.08) 0%, rgba(200, 140, 0, 0.04) 30%, var(--glass-bg-strong) 100%);
+  border: 1px solid rgba(255, 190, 0, 0.3);
+  animation: glowBreathAmber 3s ease-in-out infinite;
+}
+
+.device-card--paused:hover {
+  border-color: rgba(255, 190, 0, 0.55);
+}
+
+.device-card--paused .device-card-accent {
+  background: linear-gradient(90deg, #ffbe00, #ff8c00);
+  height: 3px;
+}
+
+.device-card--paused .device-card-corner {
+  border-color: #ffbe00;
+}
+
+.device-card--paused .device-card-icon-wrapper {
+  background: rgba(255, 190, 0, 0.12);
+  color: #ffbe00;
+}
+
+@keyframes glowBreathAmber {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 190, 0, 0.1); }
+  50%       { box-shadow: 0 0 35px rgba(255, 190, 0, 0.25), 0 0 60px rgba(255, 190, 0, 0.08); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    DEVICE TYPE VARIANTS
    ═══════════════════════════════════════════════════════════════ */
 
@@ -468,3 +501,41 @@ body.rtl .device-card-corner--br { border-radius: 0 0 0 4px; }
   background: rgba(255, 63, 210, 0.18);
   box-shadow: 0 0 15px rgba(255, 63, 210, 0.2);
 }
+
+.device-card-action-btn--pause {
+  background: rgba(255, 190, 0, 0.08);
+  border-color: rgba(255, 190, 0, 0.25);
+  color: #ffbe00;
+}
+
+.device-card-action-btn--pause:hover {
+  background: rgba(255, 190, 0, 0.18);
+  box-shadow: 0 0 15px rgba(255, 190, 0, 0.2);
+}
+
+.device-card-action-btn--resume {
+  background: rgba(0, 230, 120, 0.08);
+  border-color: rgba(0, 230, 120, 0.25);
+  color: #00e678;
+}
+
+.device-card-action-btn--resume:hover {
+  background: rgba(0, 230, 120, 0.18);
+  box-shadow: 0 0 15px rgba(0, 230, 120, 0.2);
+}
+
+.device-card-badge--paused {
+  background: rgba(255, 190, 0, 0.12);
+  color: #ffbe00;
+  border: 1px solid rgba(255, 190, 0, 0.35);
+  font-size: 0.6rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.device-card-timer--paused {
+  background: rgba(255, 190, 0, 0.06);
+  border: 1px solid rgba(255, 190, 0, 0.2);
+  color: #ffbe00;
+}
+

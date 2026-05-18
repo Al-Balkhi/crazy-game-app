@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Monitor, Package, Gamepad2 } from 'lucide-react';
+import { Monitor, Package, Gamepad2, FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './Sidebar.css';
 
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/', icon: Monitor, labelKey: 'dashboard' },
   { path: '/devices', icon: Gamepad2, labelKey: 'devices' },
   { path: '/products', icon: Package, labelKey: 'products' },
+  { path: '/invoice-log', icon: FileText, labelKey: 'invoice_log' },
 ];
 
 export function Sidebar() {

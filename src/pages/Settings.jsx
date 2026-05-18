@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Save, Plus, Edit3, Trash2, Download, Lock, Unlock, DollarSign, Palette, FileSpreadsheet, Clock } from 'lucide-react';
+import { Save, Plus, Edit3, Trash2, Lock, Unlock, DollarSign, Palette, Clock } from 'lucide-react';
 import { CyberButton } from '../components/shared/CyberButton';
-import { CyberInput, CyberSelect } from '../components/shared/CyberInput';
+import { CyberInput } from '../components/shared/CyberInput';
 import { CyberModal } from '../components/shared/CyberModal';
 import { CyberTable } from '../components/shared/CyberTable';
-import { settingsAPI, deviceTypesAPI, reportsAPI } from '../lib/api';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import { settingsAPI, deviceTypesAPI } from '../lib/api';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotify } from '../contexts/NotifyContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -21,12 +19,6 @@ export function Settings() {
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [typeForm, setTypeForm] = useState({ name: '', dual_price: '', triple_price: '', quad_price: '' });
-
-  const [reportType, setReportType] = useState('monthly');
-  const [reportYear, setReportYear] = useState(new Date().getFullYear());
-  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
-  const [reportDay, setReportDay] = useState(new Date().getDate());
-  const [report, setReport] = useState(null);
 
   const { t } = useLanguage();
   const notify = useNotify();
@@ -101,71 +93,6 @@ export function Settings() {
     }
   };
 
-  const loadReport = async () => {
-    try {
-      let r;
-      if (reportType === 'daily') {
-        r = await reportsAPI.daily(reportYear, reportMonth, reportDay);
-      } else {
-        r = await reportsAPI.monthly(reportYear, reportMonth);
-      }
-      setReport(r);
-    } catch (err) { notify.error(err.message); }
-  };
-
-  // Helper: auto-save report to app data folder
-  const autoSaveReport = (wb, filename) => {
-    try {
-      if (window.electronFS) {
-        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const result = window.electronFS.saveReport(filename, buf);
-        if (result.success) {
-          console.log(`Report auto-saved to: ${result.path}`);
-          return true;
-        } else {
-          console.warn('Auto-save failed:', result.error);
-        }
-      }
-    } catch (err) {
-      console.warn('Auto-save to program folder failed:', err);
-    }
-    return false;
-  };
-
-  const exportReport = () => {
-    if (!report) return;
-    const isDaily = reportType === 'daily';
-    const periodLabel = isDaily ? report.day : report.month;
-    const periodKey = isDaily ? t('day') : t('month');
-
-    const rows = [
-      { Metric: periodKey, Value: periodLabel },
-      { Metric: t('device_revenue'), Value: report.device_revenue },
-      { Metric: t('product_revenue'), Value: report.product_revenue },
-      { Metric: t('total_income'), Value: report.total_income },
-      { Metric: t('sessions_count'), Value: report.total_sessions },
-      { Metric: t('products_sold'), Value: report.total_products_sold },
-    ];
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, t('reports_export'));
-
-    const filename = `report_${periodLabel}.xlsx`;
-
-    // Save to user-chosen location
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf]), filename);
-
-    // Auto-save a copy to program folder
-    const saved = autoSaveReport(wb, filename);
-    if (saved) {
-      notify.info(t('report_auto_saved'));
-    }
-  };
-
-  // Get number of days in selected month
-  const daysInMonth = new Date(reportYear, reportMonth, 0).getDate();
-
   const typeColumns = [
     { key: 'id', label: 'ID' },
     { key: 'name', label: t('type_name') },
@@ -190,7 +117,7 @@ export function Settings() {
           <div className="settings-panel-body">
             <CyberInput label={t('store_name')} value={settingsForm.store_name} onChange={(e) => setSettingsForm({ ...settingsForm, store_name: e.target.value })} />
             <p className="settings-hint">{t('store_logo_hint')}</p>
-            
+
             <div className="settings-field">
               <label className="settings-field-label">{t('time_format')}</label>
               <div className="time-format-selector">
@@ -264,83 +191,6 @@ export function Settings() {
                 </>
               )}
             />
-          </div>
-        </div>
-
-        <div className="settings-panel settings-panel--wide">
-          <div className="settings-panel-header">
-            <FileSpreadsheet size={18} />
-            <h2>{t('reports_export')}</h2>
-          </div>
-          <div className="settings-panel-body">
-            {/* Report Type Selector */}
-            <div className="settings-field">
-              <label className="settings-field-label">{t('report_type')}</label>
-              <div className="time-format-selector">
-                <button
-                  className={`time-format-btn ${reportType === 'monthly' ? 'active' : ''}`}
-                  onClick={() => { setReportType('monthly'); setReport(null); }}
-                >
-                  <FileSpreadsheet size={14} />
-                  {t('monthly_report')}
-                </button>
-                <button
-                  className={`time-format-btn ${reportType === 'daily' ? 'active' : ''}`}
-                  onClick={() => { setReportType('daily'); setReport(null); }}
-                >
-                  <Clock size={14} />
-                  {t('daily_report')}
-                </button>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <CyberInput label={t('year')} type="number" value={reportYear} onChange={(e) => setReportYear(parseInt(e.target.value))} />
-              <CyberSelect label={t('month')} value={reportMonth} onChange={(e) => setReportMonth(parseInt(e.target.value))}>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
-                ))}
-              </CyberSelect>
-              {reportType === 'daily' && (
-                <CyberSelect label={t('day')} value={reportDay} onChange={(e) => setReportDay(parseInt(e.target.value))}>
-                  {Array.from({ length: daysInMonth }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>{i + 1}</option>
-                  ))}
-                </CyberSelect>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <CyberButton variant="primary" size="sm" onClick={loadReport}>{t('generate_report')}</CyberButton>
-              {report && (
-                <CyberButton variant="secondary" size="sm" onClick={exportReport}>
-                  <Download size={14} /> {t('export_excel')}
-                </CyberButton>
-              )}
-            </div>
-            {report && (
-              <div className="report-summary">
-                <div className="report-stat">
-                  <span className="report-stat-label">{t('device_revenue')}</span>
-                  <span className="report-stat-value" style={{ color: 'var(--cyber-cyan)' }}>{report.device_revenue.toLocaleString()} {t('syp')}</span>
-                </div>
-                <div className="report-stat">
-                  <span className="report-stat-label">{t('product_revenue')}</span>
-                  <span className="report-stat-value" style={{ color: 'var(--cyber-purple)' }}>{report.product_revenue.toLocaleString()} {t('syp')}</span>
-                </div>
-                <div className="report-stat report-stat--total">
-                  <span className="report-stat-label">{t('total_income')}</span>
-                  <span className="report-stat-value" style={{ color: 'var(--cyber-cyan)' }}>{report.total_income.toLocaleString()} {t('syp')}</span>
-                </div>
-                <div className="report-stat">
-                  <span className="report-stat-label">{t('sessions_count')}</span>
-                  <span className="report-stat-value">{report.total_sessions}</span>
-                </div>
-                <div className="report-stat">
-                  <span className="report-stat-label">{t('products_sold')}</span>
-                  <span className="report-stat-value">{report.total_products_sold}</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

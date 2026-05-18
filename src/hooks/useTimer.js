@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Custom hook for a live countdown timer.
- * @param {string|Date} endTime  – when the session ends
- * @param {function}    onExpire – callback fired once when the timer hits 0
+ * @param {string|Date} endTime   – when the session ends
+ * @param {function}    onExpire  – callback fired once when the timer hits 0
  * @returns {{ hours, minutes, seconds, totalSeconds, isExpired, formatted }}
  */
 export function useTimer(endTime, onExpire) {

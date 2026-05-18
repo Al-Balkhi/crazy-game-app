@@ -90,6 +90,7 @@ class Session(Base):
     total_cost = Column(Float, default=0.0)
     status = Column(String(20), default=SessionStatus.ACTIVE.value)
     ended_at = Column(DateTime, nullable=True)
+    paused_at = Column(DateTime, nullable=True)  # set when status='paused'
     created_at = Column(DateTime, default=datetime.utcnow)
 
     device = relationship("Device", back_populates="sessions")

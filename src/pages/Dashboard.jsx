@@ -21,7 +21,7 @@ export function Dashboard() {
   const [addProductTarget, setAddProductTarget] = useState(null);
   const [sessionInfoTarget, setSessionInfoTarget] = useState(null);
 
-  const { playLoop, stop: stopSound } = useSound();
+  const { playLoop, play: playOnce, stop: stopSound } = useSound();
   const { t } = useLanguage();
   const notify = useNotify();
 
@@ -53,12 +53,12 @@ export function Dashboard() {
     }
   };
 
-  // End session
+  // End session manually — NO alarm sound
   const handleEndSession = async (device, session) => {
     try {
       await sessionsAPI.end(session.id);
       const invoice = await sessionsAPI.invoice(session.id);
-      playLoop();
+      // Do NOT play alarm for manual end
       setInvoiceData(invoice);
       await loadDevices();
     } catch (err) {
@@ -66,9 +66,9 @@ export function Dashboard() {
     }
   };
 
-  // Session expired
+  // Session expired automatically — play looping alarm
   const handleSessionExpired = useCallback(async (device, session) => {
-    playLoop();
+    playLoop(); // alarm plays and loops (auto-stops after 10s via useSound)
     try {
       await sessionsAPI.end(session.id);
       const invoice = await sessionsAPI.invoice(session.id);
@@ -78,6 +78,26 @@ export function Dashboard() {
       console.error('Auto-end failed:', err);
     }
   }, [playLoop, loadDevices]);
+
+  // Pause session
+  const handlePauseSession = async (device, session) => {
+    try {
+      await sessionsAPI.pause(session.id);
+      await loadDevices();
+    } catch (err) {
+      notify.error(err.message);
+    }
+  };
+
+  // Resume session
+  const handleResumeSession = async (device, session) => {
+    try {
+      await sessionsAPI.resume(session.id);
+      await loadDevices();
+    } catch (err) {
+      notify.error(err.message);
+    }
+  };
 
   // Add product to session
   const handleAddProduct = async (sessionId, productData) => {
@@ -91,7 +111,19 @@ export function Dashboard() {
     }
   };
 
+  // Remove product from session
+  const handleRemoveProduct = async (sessionId, sessionProductId) => {
+    try {
+      await sessionsAPI.removeProduct(sessionId, sessionProductId);
+      await loadDevices();
+      window.dispatchEvent(new Event('inventory-changed'));
+    } catch (err) {
+      notify.error(err.message);
+    }
+  };
+
   const activeCount = devices.filter(d => d.active_session?.status === 'active').length;
+  const pausedCount = devices.filter(d => d.active_session?.status === 'paused').length;
   const availableCount = devices.filter(d => d.is_active && !d.active_session).length;
 
   return (
@@ -106,6 +138,12 @@ export function Dashboard() {
           <span className="dashboard-stat-value dashboard-stat-value--pink">{activeCount}</span>
           <span className="dashboard-stat-label">{t('active')}</span>
         </div>
+        {pausedCount > 0 && (
+          <div className="dashboard-stat">
+            <span className="dashboard-stat-value dashboard-stat-value--yellow">{pausedCount}</span>
+            <span className="dashboard-stat-label">{t('paused')}</span>
+          </div>
+        )}
         <div className="dashboard-stat">
           <span className="dashboard-stat-value dashboard-stat-value--purple">{devices.length}</span>
           <span className="dashboard-stat-label">{t('total')}</span>
@@ -132,6 +170,8 @@ export function Dashboard() {
               device={device}
               onBook={(d) => setBookingDevice(d)}
               onEndSession={handleEndSession}
+              onPauseSession={handlePauseSession}
+              onResumeSession={handleResumeSession}
               onAddProduct={(d, s) => setAddProductTarget({ device: d, session: s })}
               onSessionExpired={handleSessionExpired}
               onViewSession={(d, s) => setSessionInfoTarget({ device: d, session: s })}
@@ -166,6 +206,14 @@ export function Dashboard() {
         onClose={() => setSessionInfoTarget(null)}
         device={sessionInfoTarget?.device}
         session={sessionInfoTarget?.session}
+        onAddProduct={(s) => {
+          setSessionInfoTarget(null);
+          setAddProductTarget({ device: sessionInfoTarget?.device, session: s });
+        }}
+        onRemoveProduct={handleRemoveProduct}
+        onPause={handlePauseSession}
+        onResume={handleResumeSession}
+        onEnd={handleEndSession}
       />
     </div>
   );

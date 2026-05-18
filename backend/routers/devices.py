@@ -14,7 +14,7 @@ def _enrich_device(device: Device, db: Session) -> dict:
         db.query(GameSession)
         .filter(
             GameSession.device_id == device.id,
-            GameSession.status == SessionStatus.ACTIVE.value,
+            GameSession.status.in_([SessionStatus.ACTIVE.value, "paused"]),
         )
         .first()
     )

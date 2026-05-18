@@ -97,8 +97,18 @@ export const productsAPI = {
 export const sessionsAPI = {
   start: (data) => request('/sessions/', { method: 'POST', body: JSON.stringify(data) }),
   end: (id) => request(`/sessions/${id}/end`, { method: 'PUT' }),
+  pause: (id) => request(`/sessions/${id}/pause`, { method: 'PUT' }),
+  resume: (id) => request(`/sessions/${id}/resume`, { method: 'PUT' }),
   get: (id) => request(`/sessions/${id}`),
+  list: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.filter) q.set('filter', params.filter);
+    if (params.page) q.set('page', params.page);
+    if (params.page_size) q.set('page_size', params.page_size);
+    return request(`/sessions/?${q.toString()}`);
+  },
   addProduct: (sessionId, data) => request(`/sessions/${sessionId}/products`, { method: 'POST', body: JSON.stringify(data) }),
+  removeProduct: (sessionId, sessionProductId) => request(`/sessions/${sessionId}/products/${sessionProductId}`, { method: 'DELETE' }),
   invoice: (id) => request(`/sessions/${id}/invoice`),
 };
 
